@@ -32,7 +32,7 @@ function makeGzippedCardJson(array $cards): string
 test('it skips import when already imported today', function () {
     Cache::put('scryfall:last_import', now()->toDateString(), now()->addDay());
 
-    $this->artisan('scryfall:import')
+    $this->artisan('scryfall:import-cards')
         ->expectsOutputToContain('Already imported today')
         ->assertSuccessful();
 });
@@ -68,7 +68,7 @@ test('it runs import when forced even if already imported today', function () {
 
     fakeScryfallBulkDataResponse(gzContent: $gzContent);
 
-    $this->artisan('scryfall:import --force --no-progress')
+    $this->artisan('scryfall:import-cards --force --no-progress')
         ->assertSuccessful();
 
     expect(Card::where('name', 'Test Card')->exists())->toBeTrue();
@@ -87,7 +87,7 @@ test('it rejects download URIs from untrusted domains', function () {
         ]),
     ]);
 
-    $this->artisan('scryfall:import --force --no-progress')
+    $this->artisan('scryfall:import-cards --force --no-progress')
         ->expectsOutputToContain('Could not find default_cards bulk data')
         ->assertFailed();
 });
@@ -97,7 +97,7 @@ test('it fails gracefully when scryfall api is unreachable', function () {
         'api.scryfall.com/bulk-data' => Http::response('', 500),
     ]);
 
-    $this->artisan('scryfall:import --force --no-progress')
+    $this->artisan('scryfall:import-cards --force --no-progress')
         ->expectsOutputToContain('Could not find default_cards bulk data')
         ->assertFailed();
 });
@@ -251,7 +251,7 @@ test('it sets cache key after successful import', function () {
 
     fakeScryfallBulkDataResponse(gzContent: $gzContent);
 
-    $this->artisan('scryfall:import --force --no-progress')
+    $this->artisan('scryfall:import-cards --force --no-progress')
         ->assertSuccessful();
 
     expect(Cache::get('scryfall:last_import'))->toBe(now()->toDateString());

@@ -3,6 +3,7 @@
 use App\Mcp\Servers\MtgServer;
 use App\Mcp\Tools\SearchCard;
 use App\Models\Card;
+use App\Models\Ruling;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -41,6 +42,21 @@ test('it returns most recent printing', function () {
 
     $response->assertOk()
         ->assertSee('clu');
+});
+
+test('it includes rulings in response', function () {
+    $card = Card::factory()->create(['name' => 'Lightning Bolt']);
+    Ruling::factory()->forCard($card)->create([
+        'source' => 'wotc',
+        'published_at' => '2024-06-07',
+        'comment' => 'Lightning Bolt deals 3 damage to any target.',
+    ]);
+
+    $response = MtgServer::tool(SearchCard::class, ['name' => 'Lightning Bolt']);
+
+    $response->assertOk()
+        ->assertSee('Lightning Bolt deals 3 damage to any target.')
+        ->assertSee('wotc');
 });
 
 test('it returns error for unknown card', function () {

@@ -26,7 +26,8 @@ class SearchCards extends Tool
         $names = $validated['names'];
         $loweredNames = array_map('mb_strtolower', $names);
 
-        $cards = Card::whereRaw('LOWER(name) IN (' . implode(',', array_fill(0, count($loweredNames), '?')) . ')', $loweredNames)
+        $cards = Card::with('rulings')
+            ->whereRaw('LOWER(name) IN (' . implode(',', array_fill(0, count($loweredNames), '?')) . ')', $loweredNames)
             ->orderByDesc('released_at')
             ->get()
             ->groupBy(fn (Card $card) => mb_strtolower($card->name));

@@ -22,7 +22,8 @@ class SearchCard extends Tool
             'name' => 'required|string|max:300',
         ]);
 
-        $card = Card::byExactName($validated['name'])
+        $card = Card::with('rulings')
+            ->byExactName($validated['name'])
             ->orderByDesc('released_at')
             ->first();
 

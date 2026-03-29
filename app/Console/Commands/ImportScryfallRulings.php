@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Card;
+use App\Models\Ruling;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use JsonMachine\Items;
 
-#[Signature('scryfall:import-cards {--force : Force import even if already imported today} {--no-progress : Hide progress bars}')]
-#[Description('Download and import Scryfall bulk card data')]
-class ImportScryfallCards extends Command
+#[Signature('scryfall:import-rulings {--force : Force import even if already imported today} {--no-progress : Hide progress bars}')]
+#[Description('Download and import Scryfall bulk rulings data')]
+class ImportScryfallRulings extends Command
 {
     private const BATCH_SIZE = 500;
 
-    private const CACHE_KEY = 'scryfall:last_import';
+    private const CACHE_KEY = 'scryfall:last_rulings_import';
 
     public function handle(): int
     {
@@ -31,26 +31,26 @@ class ImportScryfallCards extends Command
         $bulkData = $this->getBulkDataInfo();
 
         if (! $bulkData) {
-            $this->error('Could not find default_cards bulk data from Scryfall.');
+            $this->error('Could not find rulings bulk data from Scryfall.');
 
             return self::FAILURE;
         }
 
-        $storagePath = 'scryfall/default_cards.json.gz';
+        $storagePath = 'scryfall/rulings.json.gz';
         $fullPath = storage_path('app/private/' . $storagePath);
 
         if (! $this->downloadFile($bulkData['download_uri'], $fullPath, $bulkData['size'])) {
             return self::FAILURE;
         }
 
-        $this->info('Importing cards into database...');
-        $count = $this->importCards($fullPath);
+        $this->info('Importing rulings into database...');
+        $count = $this->importRulings($fullPath);
 
         Storage::disk('local')->delete($storagePath);
 
         Cache::put(self::CACHE_KEY, now()->toDateString(), now()->addDay());
 
-        $this->info("Successfully imported {$count} cards.");
+        $this->info("Successfully imported {$count} rulings.");
 
         return self::SUCCESS;
     }
@@ -70,7 +70,7 @@ class ImportScryfallCards extends Command
         $data = $response->json('data', []);
 
         foreach ($data as $entry) {
-            if ($entry['type'] === 'default_cards') {
+            if ($entry['type'] === 'rulings') {
                 $uri = $entry['download_uri'];
 
                 if (! str_starts_with($uri, 'https://data.scryfall.io/')) {
@@ -134,7 +134,7 @@ class ImportScryfallCards extends Command
         return true;
     }
 
-    private function importCards(string $filePath): int
+    private function importRulings(string $filePath): int
     {
         $stream = gzopen($filePath, 'rb');
 
@@ -152,13 +152,13 @@ class ImportScryfallCards extends Command
 
         if ($showProgress) {
             $progressBar = $this->output->createProgressBar();
-            $progressBar->setFormat(' %current% cards [%bar%] %elapsed:6s% %memory:6s%');
+            $progressBar->setFormat(' %current% rulings [%bar%] %elapsed:6s% %memory:6s%');
             $progressBar->start();
         }
 
-        foreach ($items as $card) {
-            $card = (array) $card;
-            $batch[] = $this->extractCardData($card);
+        foreach ($items as $ruling) {
+            $ruling = (array) $ruling;
+            $batch[] = $this->extractRulingData($ruling);
             $count++;
 
             if (count($batch) >= self::BATCH_SIZE) {
@@ -191,73 +191,29 @@ class ImportScryfallCards extends Command
      */
     private function upsertBatch(array $batch): void
     {
-        Card::upsert($batch, ['id'], [
-            'oracle_id', 'name', 'mana_cost', 'cmc', 'type_line', 'oracle_text',
-            'colors', 'color_identity', 'keywords', 'power', 'toughness', 'loyalty',
-            'layout', 'set', 'set_name', 'collector_number', 'rarity', 'released_at',
-            'reprint', 'digital', 'reserved', 'image_uris', 'legalities', 'prices',
-            'edhrec_rank', 'flavor_text', 'games', 'finishes', 'card_faces', 'all_parts',
-            'updated_at',
+        Ruling::upsert($batch, ['content_hash'], [
+            'oracle_id', 'source', 'published_at', 'comment', 'updated_at',
         ]);
     }
 
     /**
-     * @param  array<string, mixed>  $card
+     * @param  array<string, mixed>  $ruling
      * @return array<string, mixed>
      */
-    private function extractCardData(array $card): array
+    private function extractRulingData(array $ruling): array
     {
-        $manaCost = $card['mana_cost'] ?? null;
-        $oracleText = $card['oracle_text'] ?? null;
-        $colors = $card['colors'] ?? null;
-        $power = $card['power'] ?? null;
-        $toughness = $card['toughness'] ?? null;
-
-        $cardFaces = $card['card_faces'] ?? null;
-
-        if ($manaCost === null && isset($cardFaces[0])) {
-            $front = (array) $cardFaces[0];
-            $manaCost = $front['mana_cost'] ?? null;
-            $oracleText = $front['oracle_text'] ?? null;
-            $colors = $front['colors'] ?? null;
-            $power = $front['power'] ?? null;
-            $toughness = $front['toughness'] ?? null;
-        }
+        $oracleId = $ruling['oracle_id'];
+        $publishedAt = $ruling['published_at'];
+        $comment = $ruling['comment'];
 
         $now = now()->toDateTimeString();
 
         return [
-            'id' => $card['id'],
-            'oracle_id' => $card['oracle_id'] ?? null,
-            'name' => $card['name'],
-            'mana_cost' => $manaCost,
-            'cmc' => $card['cmc'] ?? null,
-            'type_line' => $card['type_line'] ?? null,
-            'oracle_text' => $oracleText,
-            'colors' => json_encode($colors),
-            'color_identity' => json_encode($card['color_identity'] ?? null),
-            'keywords' => json_encode($card['keywords'] ?? []),
-            'power' => $power,
-            'toughness' => $toughness,
-            'loyalty' => $card['loyalty'] ?? null,
-            'layout' => $card['layout'],
-            'set' => $card['set'],
-            'set_name' => $card['set_name'],
-            'collector_number' => $card['collector_number'],
-            'rarity' => $card['rarity'],
-            'released_at' => $card['released_at'] ?? null,
-            'reprint' => $card['reprint'] ?? false,
-            'digital' => $card['digital'] ?? false,
-            'reserved' => $card['reserved'] ?? false,
-            'image_uris' => json_encode($card['image_uris'] ?? null),
-            'legalities' => json_encode($card['legalities'] ?? null),
-            'prices' => json_encode($card['prices'] ?? null),
-            'edhrec_rank' => $card['edhrec_rank'] ?? null,
-            'flavor_text' => $card['flavor_text'] ?? null,
-            'games' => json_encode($card['games'] ?? []),
-            'finishes' => json_encode($card['finishes'] ?? []),
-            'card_faces' => json_encode($cardFaces),
-            'all_parts' => json_encode($card['all_parts'] ?? null),
+            'oracle_id' => $oracleId,
+            'source' => $ruling['source'],
+            'published_at' => $publishedAt,
+            'comment' => $comment,
+            'content_hash' => hash('sha256', $oracleId . '|' . $publishedAt . '|' . $comment),
             'created_at' => $now,
             'updated_at' => $now,
         ];

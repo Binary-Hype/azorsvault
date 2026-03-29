@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Card extends Model
 {
@@ -39,6 +40,14 @@ class Card extends Model
             'digital' => 'boolean',
             'reserved' => 'boolean',
         ];
+    }
+
+    /**
+     * @return HasMany<Ruling, $this>
+     */
+    public function rulings(): HasMany
+    {
+        return $this->hasMany(Ruling::class, 'oracle_id', 'oracle_id');
     }
 
     /**
@@ -183,7 +192,7 @@ class Card extends Model
      */
     public function toSearchResult(): array
     {
-        return [
+        $result = [
             'id' => $this->id,
             'oracle_id' => $this->oracle_id,
             'name' => $this->name,
@@ -209,5 +218,19 @@ class Card extends Model
             'edhrec_rank' => $this->edhrec_rank,
             'flavor_text' => $this->flavor_text,
         ];
+
+        if ($this->relationLoaded('rulings')) {
+            $result['rulings'] = $this->rulings
+                ->sortByDesc('published_at')
+                ->map(fn (Ruling $ruling) => [
+                    'source' => $ruling->source,
+                    'published_at' => $ruling->published_at->toDateString(),
+                    'comment' => $ruling->comment,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $result;
     }
 }
