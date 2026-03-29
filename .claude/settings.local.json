@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__laravel-boost__database-schema",
+      "WebFetch(domain:api.scryfall.com)",
+      "mcp__laravel-boost__search-docs",
+      "Bash(ddev artisan:*)",
+      "Bash(ddev exec:*)",
+      "mcp__laravel-boost__read-log-entries",
+      "mcp__laravel-boost__application-info"
+    ]
+  }
+}
