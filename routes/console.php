@@ -19,3 +19,10 @@ Schedule::command('scryfall:import-rulings')
     ->at('03:30')
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('rules:import-comprehensive')
+    ->weekly()
+    ->sundays()
+    ->at('04:00')
+    ->withoutOverlapping()
+    ->runInBackground();

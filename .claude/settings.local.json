@@ -7,7 +7,8 @@
       "Bash(ddev artisan:*)",
       "Bash(ddev exec:*)",
       "mcp__laravel-boost__read-log-entries",
-      "mcp__laravel-boost__application-info"
+      "mcp__laravel-boost__application-info",
+      "WebFetch(domain:media.wizards.com)"
     ]
   }
 }
