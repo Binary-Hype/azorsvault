@@ -1,10 +1,10 @@
 <?php
 
+use App\Console\Commands\ImportScryfallCards;
 use App\Models\Card;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -103,7 +103,7 @@ test('it fails gracefully when scryfall api is unreachable', function () {
 });
 
 test('it extracts card data correctly from scryfall format', function () {
-    $command = new \App\Console\Commands\ImportScryfallCards;
+    $command = new ImportScryfallCards;
 
     $scryfallCard = [
         'id' => '550c74d4-1fcb-406a-b02a-639a760a4380',
@@ -155,7 +155,7 @@ test('it extracts card data correctly from scryfall format', function () {
 });
 
 test('it extracts front face data for double-faced cards', function () {
-    $command = new \App\Console\Commands\ImportScryfallCards;
+    $command = new ImportScryfallCards;
 
     $scryfallCard = [
         'id' => 'abc-123',
@@ -218,6 +218,48 @@ test('it extracts front face data for double-faced cards', function () {
         ->toHaveKey('toughness', '1');
 
     expect($result['colors'])->toBe(json_encode(['U']));
+});
+
+test('it removes stale cards not present in import', function () {
+    $staleCard = Card::factory()->create([
+        'name' => 'Stale Card',
+        'updated_at' => now()->subDay(),
+    ]);
+
+    $freshId = fake()->uuid();
+    $gzContent = makeGzippedCardJson([
+        [
+            'id' => $freshId,
+            'oracle_id' => fake()->uuid(),
+            'name' => 'Fresh Card',
+            'mana_cost' => '{R}',
+            'cmc' => 1.0,
+            'type_line' => 'Instant',
+            'oracle_text' => 'Deal 3 damage.',
+            'colors' => ['R'],
+            'color_identity' => ['R'],
+            'keywords' => [],
+            'layout' => 'normal',
+            'set' => 'tst',
+            'set_name' => 'Test Set',
+            'collector_number' => '1',
+            'rarity' => 'common',
+            'released_at' => '2024-01-01',
+            'reprint' => false,
+            'digital' => false,
+            'reserved' => false,
+            'games' => ['paper'],
+            'finishes' => ['nonfoil'],
+        ],
+    ]);
+
+    fakeScryfallBulkDataResponse(gzContent: $gzContent);
+
+    $this->artisan('scryfall:import-cards --force --no-progress')
+        ->assertSuccessful();
+
+    expect(Card::find($staleCard->id))->toBeNull();
+    expect(Card::find($freshId))->not->toBeNull();
 });
 
 test('it sets cache key after successful import', function () {

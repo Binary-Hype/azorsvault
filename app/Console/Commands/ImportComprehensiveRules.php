@@ -45,13 +45,16 @@ class ImportComprehensiveRules extends Command
         }
 
         $this->info('Parsing and importing rules...');
+        $importStartedAt = now();
         $count = $this->importRules($fullPath);
+
+        $deleted = ComprehensiveRule::where('updated_at', '<', $importStartedAt)->delete();
 
         Storage::disk('local')->delete($storagePath);
 
         Cache::put(self::CACHE_KEY, now()->toDateString(), now()->addDay());
 
-        $this->info("Successfully imported {$count} rules.");
+        $this->info("Successfully imported {$count} rules. Removed {$deleted} stale rules.");
 
         return self::SUCCESS;
     }

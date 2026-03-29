@@ -37,20 +37,23 @@ class ImportScryfallRulings extends Command
         }
 
         $storagePath = 'scryfall/rulings.json.gz';
-        $fullPath = storage_path('app/private/' . $storagePath);
+        $fullPath = storage_path('app/private/'.$storagePath);
 
         if (! $this->downloadFile($bulkData['download_uri'], $fullPath, $bulkData['size'])) {
             return self::FAILURE;
         }
 
         $this->info('Importing rulings into database...');
+        $importStartedAt = now();
         $count = $this->importRulings($fullPath);
+
+        $deleted = Ruling::where('updated_at', '<', $importStartedAt)->delete();
 
         Storage::disk('local')->delete($storagePath);
 
         Cache::put(self::CACHE_KEY, now()->toDateString(), now()->addDay());
 
-        $this->info("Successfully imported {$count} rulings.");
+        $this->info("Successfully imported {$count} rulings. Removed {$deleted} stale rulings.");
 
         return self::SUCCESS;
     }
@@ -213,7 +216,7 @@ class ImportScryfallRulings extends Command
             'source' => $ruling['source'],
             'published_at' => $publishedAt,
             'comment' => $comment,
-            'content_hash' => hash('sha256', $oracleId . '|' . $publishedAt . '|' . $comment),
+            'content_hash' => hash('sha256', $oracleId.'|'.$publishedAt.'|'.$comment),
             'created_at' => $now,
             'updated_at' => $now,
         ];

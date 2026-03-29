@@ -1,10 +1,10 @@
 <?php
 
+use App\Console\Commands\ImportScryfallRulings;
 use App\Models\Ruling;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -88,7 +88,7 @@ test('it fails gracefully when scryfall api is unreachable', function () {
 });
 
 test('it extracts ruling data correctly from scryfall format', function () {
-    $command = new \App\Console\Commands\ImportScryfallRulings;
+    $command = new ImportScryfallRulings;
 
     $scryfallRuling = [
         'oracle_id' => 'b7c01b1c-a8e2-4234-aec9-3a2d6c58e0bd',
@@ -108,6 +108,31 @@ test('it extracts ruling data correctly from scryfall format', function () {
 
     $expectedHash = hash('sha256', 'b7c01b1c-a8e2-4234-aec9-3a2d6c58e0bd|2024-06-07|Lightning Bolt deals 3 damage to any target.');
     expect($result['content_hash'])->toBe($expectedHash);
+});
+
+test('it removes stale rulings not present in import', function () {
+    $staleRuling = Ruling::factory()->create([
+        'comment' => 'This ruling no longer exists.',
+        'updated_at' => now()->subDay(),
+    ]);
+
+    $oracleId = fake()->uuid();
+    $gzContent = makeGzippedRulingsJson([
+        [
+            'oracle_id' => $oracleId,
+            'source' => 'wotc',
+            'published_at' => '2024-01-01',
+            'comment' => 'This is the current ruling.',
+        ],
+    ]);
+
+    fakeScryfallBulkRulingsResponse(gzContent: $gzContent);
+
+    $this->artisan('scryfall:import-rulings --force --no-progress')
+        ->assertSuccessful();
+
+    expect(Ruling::find($staleRuling->id))->toBeNull();
+    expect(Ruling::where('oracle_id', $oracleId)->exists())->toBeTrue();
 });
 
 test('it sets cache key after successful import', function () {

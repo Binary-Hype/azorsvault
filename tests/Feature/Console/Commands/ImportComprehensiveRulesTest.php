@@ -172,6 +172,22 @@ test('it handles multi-line rules correctly', function () {
     expect($rule->content)->toContain('See section 8');
 });
 
+test('it removes stale rules not present in import', function () {
+    $staleRule = ComprehensiveRule::factory()->create([
+        'rule_number' => '999.99',
+        'content' => 'This rule was removed.',
+        'updated_at' => now()->subDay(),
+    ]);
+
+    fakeRulesPageWithDownload(txtContent: sampleRulesTxt());
+
+    $this->artisan('rules:import-comprehensive --force --no-progress')
+        ->assertSuccessful();
+
+    expect(ComprehensiveRule::find($staleRule->id))->toBeNull();
+    expect(ComprehensiveRule::byRuleNumber('100.1')->exists())->toBeTrue();
+});
+
 test('it sets cache key after successful import', function () {
     Cache::forget('rules:last_comprehensive_import');
 

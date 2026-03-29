@@ -37,20 +37,23 @@ class ImportScryfallCards extends Command
         }
 
         $storagePath = 'scryfall/default_cards.json.gz';
-        $fullPath = storage_path('app/private/' . $storagePath);
+        $fullPath = storage_path('app/private/'.$storagePath);
 
         if (! $this->downloadFile($bulkData['download_uri'], $fullPath, $bulkData['size'])) {
             return self::FAILURE;
         }
 
         $this->info('Importing cards into database...');
+        $importStartedAt = now();
         $count = $this->importCards($fullPath);
+
+        $deleted = Card::where('updated_at', '<', $importStartedAt)->delete();
 
         Storage::disk('local')->delete($storagePath);
 
         Cache::put(self::CACHE_KEY, now()->toDateString(), now()->addDay());
 
-        $this->info("Successfully imported {$count} cards.");
+        $this->info("Successfully imported {$count} cards. Removed {$deleted} stale cards.");
 
         return self::SUCCESS;
     }
