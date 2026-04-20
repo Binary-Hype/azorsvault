@@ -64,3 +64,18 @@ test('it returns error for unknown card', function () {
 
     $response->assertHasErrors();
 });
+
+test('it finds a double-faced card by combined face name', function () {
+    Card::factory()->dfc()->create([
+        'name' => 'Delver of Secrets // Insectile Aberration',
+    ]);
+
+    $response = MtgServer::tool(SearchCard::class, [
+        'name' => 'Delver of Secrets // Insectile Aberration',
+    ]);
+
+    $response->assertOk()
+        ->assertSee('Delver of Secrets')
+        ->assertSee('Insectile Aberration')
+        ->assertSee('transform');
+});

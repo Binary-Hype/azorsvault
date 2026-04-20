@@ -9,6 +9,7 @@
     "skills": [
         "laravel-best-practices",
         "mcp-development",
-        "pest-testing"
+        "pest-testing",
+        "tailwindcss-development"
     ]
 }

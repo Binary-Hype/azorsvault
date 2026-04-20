@@ -122,7 +122,8 @@ test('it respects limit parameter', function () {
 
     $response = MtgServer::tool(SearchCardsAdvanced::class, ['rarity' => 'rare', 'limit' => 2]);
 
-    $response->assertOk();
+    $response->assertOk()
+        ->assertSee('"count": 2');
 });
 
 test('it combines multiple filters', function () {
