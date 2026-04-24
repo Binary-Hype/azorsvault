@@ -58,7 +58,7 @@
                 <a href="{{ url('/#queries') }}" class="hover:text-parchment transition-colors">Examples</a>
                 <a href="{{ url('/#filters') }}" class="hover:text-parchment transition-colors">Filters</a>
                 <a href="{{ url('/#tools') }}" class="hover:text-parchment transition-colors">Tools</a>
-                <a href="https://github.com/tobse" class="text-accent font-mono text-xs hover:opacity-80 transition-opacity">GitHub ↗</a>
+                <a href="https://github.com/Binary-Hype" class="text-accent font-mono text-xs hover:opacity-80 transition-opacity">GitHub ↗</a>
             </nav>
         </header>
 
@@ -70,13 +70,7 @@
                     <span class="codex-glyph-glow text-accent">⟁</span>
                     <span>Azorsvault</span>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-7">
-                    <div class="flex flex-col gap-2.5 text-[13px]">
-                        <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-accent mb-1.5">Server</div>
-                        <a href="{{ url('/#tools') }}" class="text-parchment/60 hover:text-parchment transition-colors">Documentation</a>
-                        <a href="#" class="text-parchment/60 hover:text-parchment transition-colors">Changelog</a>
-                        <a href="#" class="text-parchment/60 hover:text-parchment transition-colors">Status</a>
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
                     <div class="flex flex-col gap-2.5 text-[13px]">
                         <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-accent mb-1.5">Resources</div>
                         <a href="https://modelcontextprotocol.io" class="text-parchment/60 hover:text-parchment transition-colors">MCP spec</a>
