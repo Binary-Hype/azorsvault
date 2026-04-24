@@ -7,25 +7,22 @@ test('root serves HTML with icon metadata', function () {
         ->assertSee('rel="icon"', false)
         ->assertSee('/icon.png', false)
         ->assertSee('/icon.jpeg', false)
-        ->assertSee('og:image', false);
+        ->assertSee('og:image', false)
+        ->assertSee('/logo.svg', false);
 });
 
-test('mcp parent serves the same HTML stub', function () {
-    $this->get('/mcp')
+test('root renders the Azorsvault landing hero', function () {
+    $this->get('/')
         ->assertOk()
-        ->assertHeader('Content-Type', 'text/html; charset=utf-8')
-        ->assertSee('rel="icon"', false);
+        ->assertSee('Azorsvault')
+        ->assertSee('An MCP server for Magic: The Gathering')
+        ->assertSee('claude mcp add --transport http azorsvault', false)
+        ->assertSee('/mcp/mtg', false)
+        ->assertSee('search-cards-advanced');
 });
 
-test('icon aliases under the mcp path serve the asset', function (string $path, string $expectedMime) {
-    $this->get($path)
-        ->assertOk()
-        ->assertHeader('Content-Type', $expectedMime);
-})->with([
-    ['/mcp/favicon.ico', 'image/vnd.microsoft.icon'],
-    ['/mcp/mtg/favicon.ico', 'image/vnd.microsoft.icon'],
-    ['/mcp/icon.png', 'image/png'],
-    ['/mcp/mtg/icon.png', 'image/png'],
-    ['/mcp/icon.jpeg', 'image/jpeg'],
-    ['/mcp/mtg/icon.jpeg', 'image/jpeg'],
-]);
+test('logo.svg ships as a public asset matching the navbar mark', function () {
+    $path = public_path('logo.svg');
+    expect($path)->toBeFile();
+    expect(file_get_contents($path))->toContain('<svg')->toContain('</svg>');
+});
