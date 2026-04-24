@@ -7,7 +7,7 @@
 
 @section('content')
     {{-- Hero --}}
-    <section class="relative z-10 mx-auto max-w-[880px] flex flex-col items-center text-center px-7 py-16 sm:px-18 sm:py-26">
+    <section class="relative z-10 mx-auto max-w-[960px] flex flex-col items-center text-center px-7 py-16 sm:px-18 sm:py-26">
         <div class="flex items-center gap-3.5 font-mono text-[11px] tracking-[0.22em] uppercase text-parchment/60 mb-7">
             <span class="codex-rule"></span>
             <span>An MCP server for Magic: The Gathering</span>
@@ -34,7 +34,7 @@
             Wired into Claude through one tidy little server.
         </p>
 
-        <div class="w-full max-w-[720px] flex flex-col gap-5 mb-8">
+        <div class="w-full max-w-[820px] flex flex-col gap-5 mb-8">
             {{-- Terminal copy block --}}
             <div class="w-full">
                 <div class="codex-label-lead font-mono text-[10.5px] tracking-[0.18em] uppercase text-white/45 mb-2.5">
