@@ -1,0 +1,21 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker
+    steps:
+      - name: Trigger deployment webhook
+        run: |
+          curl --fail-with-body \
+            --silent \
+            --show-error \
+            --request POST \
+            --data-urlencode "token=${{ secrets.PLOI_DEPLOY_TOKEN }}" \
+            --data-urlencode "direct=true" \
+            "https://ploi.io/webhooks/servers/96021/sites/366125/deploy"
