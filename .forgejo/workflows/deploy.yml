@@ -16,6 +16,5 @@ jobs:
             --silent \
             --show-error \
             --request POST \
-            --data-urlencode "token=${{ secrets.PLOI_DEPLOY_TOKEN }}" \
             --data-urlencode "direct=true" \
-            "https://ploi.io/webhooks/servers/96021/sites/366125/deploy"
+            "${{ secrets.PLOI_DEPLOY_URL }}"
