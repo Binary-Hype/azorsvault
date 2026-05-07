@@ -3,11 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Models\Card;
+use App\Services\Scryfall\BulkDataService;
+use App\Services\Scryfall\BulkDataType;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use JsonMachine\Items;
 
@@ -19,7 +20,16 @@ class ImportScryfallCards extends Command
 
     private const CACHE_KEY = 'scryfall:last_import';
 
-    public function handle(): int
+    private const UPSERT_COLUMNS = [
+        'oracle_id', 'name', 'mana_cost', 'cmc', 'type_line', 'oracle_text',
+        'colors', 'color_identity', 'keywords', 'power', 'toughness', 'loyalty',
+        'layout', 'set', 'set_name', 'collector_number', 'rarity', 'released_at',
+        'reprint', 'digital', 'reserved', 'image_uris', 'legalities', 'prices',
+        'edhrec_rank', 'flavor_text', 'games', 'finishes', 'card_faces', 'all_parts',
+        'updated_at',
+    ];
+
+    public function handle(BulkDataService $bulkData): int
     {
         if (! $this->option('force') && Cache::get(self::CACHE_KEY) === now()->toDateString()) {
             $this->info('Already imported today. Use --force to re-import.');
@@ -28,9 +38,9 @@ class ImportScryfallCards extends Command
         }
 
         $this->info('Fetching Scryfall bulk data metadata...');
-        $bulkData = $this->getBulkDataInfo();
+        $info = $bulkData->getBulkDataInfo(BulkDataType::DefaultCards);
 
-        if (! $bulkData) {
+        if (! $info) {
             $this->error('Could not find default_cards bulk data from Scryfall.');
 
             return self::FAILURE;
@@ -39,13 +49,17 @@ class ImportScryfallCards extends Command
         $storagePath = 'scryfall/default_cards.json.gz';
         $fullPath = storage_path('app/private/'.$storagePath);
 
-        if (! $this->downloadFile($bulkData['download_uri'], $fullPath, $bulkData['size'])) {
+        $output = $this->option('no-progress') ? null : $this->output;
+
+        if (! $bulkData->downloadFile($info['download_uri'], $fullPath, $info['size'], $output)) {
+            $this->error('Failed to download bulk data.');
+
             return self::FAILURE;
         }
 
         $this->info('Importing cards into database...');
         $importStartedAt = now();
-        $count = $this->importCards($fullPath);
+        $count = $this->importCards($bulkData, $fullPath);
 
         $deleted = Card::where('updated_at', '<', $importStartedAt)->delete();
 
@@ -58,86 +72,7 @@ class ImportScryfallCards extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * @return array{download_uri: string, size: int}|null
-     */
-    private function getBulkDataInfo(): ?array
-    {
-        $response = Http::withUserAgent('MtgMCP/1.0')->accept('application/json')
-            ->get('https://api.scryfall.com/bulk-data');
-
-        if (! $response->successful()) {
-            return null;
-        }
-
-        $data = $response->json('data', []);
-
-        foreach ($data as $entry) {
-            if ($entry['type'] === 'default_cards') {
-                $uri = $entry['download_uri'];
-
-                if (! str_starts_with($uri, 'https://data.scryfall.io/')) {
-                    return null;
-                }
-
-                return [
-                    'download_uri' => $uri,
-                    'size' => $entry['size'],
-                ];
-            }
-        }
-
-        return null;
-    }
-
-    private function downloadFile(string $url, string $destination, int $totalBytes): bool
-    {
-        $directory = dirname($destination);
-
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
-        $showProgress = ! $this->option('no-progress');
-        $totalMb = round($totalBytes / 1024 / 1024, 1);
-
-        if ($showProgress) {
-            $progressBar = $this->output->createProgressBar($totalBytes);
-            $progressBar->setFormat(" Downloading %current_mb% / {$totalMb} MB [%bar%] %percent:3s%%");
-            $progressBar->setMessage('0', 'current_mb');
-            $progressBar->start();
-        }
-
-        $response = Http::withUserAgent('MtgMCP/1.0')->accept('application/json')
-            ->withOptions([
-                'sink' => $destination,
-                'timeout' => 600,
-                'progress' => $showProgress
-                    ? function (int $downloadTotal, int $downloadedBytes) use (&$progressBar) {
-                        if ($downloadedBytes > 0) {
-                            $progressBar->setMessage((string) round($downloadedBytes / 1024 / 1024, 1), 'current_mb');
-                            $progressBar->setProgress($downloadedBytes);
-                        }
-                    }
-                    : null,
-            ])
-            ->get($url);
-
-        if ($showProgress) {
-            $progressBar->finish();
-            $this->newLine();
-        }
-
-        if (! $response->successful() && ! file_exists($destination)) {
-            $this->error('Failed to download bulk data.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function importCards(string $filePath): int
+    private function importCards(BulkDataService $bulkData, string $filePath): int
     {
         $stream = gzopen($filePath, 'rb');
 
@@ -152,6 +87,7 @@ class ImportScryfallCards extends Command
         $batch = [];
         $count = 0;
         $showProgress = ! $this->option('no-progress');
+        $progressBar = null;
 
         if ($showProgress) {
             $progressBar = $this->output->createProgressBar();
@@ -165,20 +101,20 @@ class ImportScryfallCards extends Command
             $count++;
 
             if (count($batch) >= self::BATCH_SIZE) {
-                $this->upsertBatch($batch);
+                $bulkData->upsertBatch(Card::class, $batch, ['id'], self::UPSERT_COLUMNS);
                 $batch = [];
 
-                if ($showProgress) {
+                if ($progressBar !== null) {
                     $progressBar->setProgress($count);
                 }
             }
         }
 
         if (count($batch) > 0) {
-            $this->upsertBatch($batch);
+            $bulkData->upsertBatch(Card::class, $batch, ['id'], self::UPSERT_COLUMNS);
         }
 
-        if ($showProgress) {
+        if ($progressBar !== null) {
             $progressBar->setProgress($count);
             $progressBar->finish();
             $this->newLine();
@@ -187,21 +123,6 @@ class ImportScryfallCards extends Command
         gzclose($stream);
 
         return $count;
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $batch
-     */
-    private function upsertBatch(array $batch): void
-    {
-        Card::upsert($batch, ['id'], [
-            'oracle_id', 'name', 'mana_cost', 'cmc', 'type_line', 'oracle_text',
-            'colors', 'color_identity', 'keywords', 'power', 'toughness', 'loyalty',
-            'layout', 'set', 'set_name', 'collector_number', 'rarity', 'released_at',
-            'reprint', 'digital', 'reserved', 'image_uris', 'legalities', 'prices',
-            'edhrec_rank', 'flavor_text', 'games', 'finishes', 'card_faces', 'all_parts',
-            'updated_at',
-        ]);
     }
 
     /**

@@ -3,11 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Models\Ruling;
+use App\Services\Scryfall\BulkDataService;
+use App\Services\Scryfall\BulkDataType;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use JsonMachine\Items;
 
@@ -19,7 +20,11 @@ class ImportScryfallRulings extends Command
 
     private const CACHE_KEY = 'scryfall:last_rulings_import';
 
-    public function handle(): int
+    private const UPSERT_COLUMNS = [
+        'oracle_id', 'source', 'published_at', 'comment', 'updated_at',
+    ];
+
+    public function handle(BulkDataService $bulkData): int
     {
         if (! $this->option('force') && Cache::get(self::CACHE_KEY) === now()->toDateString()) {
             $this->info('Already imported today. Use --force to re-import.');
@@ -28,9 +33,9 @@ class ImportScryfallRulings extends Command
         }
 
         $this->info('Fetching Scryfall bulk data metadata...');
-        $bulkData = $this->getBulkDataInfo();
+        $info = $bulkData->getBulkDataInfo(BulkDataType::Rulings);
 
-        if (! $bulkData) {
+        if (! $info) {
             $this->error('Could not find rulings bulk data from Scryfall.');
 
             return self::FAILURE;
@@ -39,13 +44,17 @@ class ImportScryfallRulings extends Command
         $storagePath = 'scryfall/rulings.json.gz';
         $fullPath = storage_path('app/private/'.$storagePath);
 
-        if (! $this->downloadFile($bulkData['download_uri'], $fullPath, $bulkData['size'])) {
+        $output = $this->option('no-progress') ? null : $this->output;
+
+        if (! $bulkData->downloadFile($info['download_uri'], $fullPath, $info['size'], $output)) {
+            $this->error('Failed to download bulk data.');
+
             return self::FAILURE;
         }
 
         $this->info('Importing rulings into database...');
         $importStartedAt = now();
-        $count = $this->importRulings($fullPath);
+        $count = $this->importRulings($bulkData, $fullPath);
 
         $deleted = Ruling::where('updated_at', '<', $importStartedAt)->delete();
 
@@ -58,86 +67,7 @@ class ImportScryfallRulings extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * @return array{download_uri: string, size: int}|null
-     */
-    private function getBulkDataInfo(): ?array
-    {
-        $response = Http::withUserAgent('MtgMCP/1.0')->accept('application/json')
-            ->get('https://api.scryfall.com/bulk-data');
-
-        if (! $response->successful()) {
-            return null;
-        }
-
-        $data = $response->json('data', []);
-
-        foreach ($data as $entry) {
-            if ($entry['type'] === 'rulings') {
-                $uri = $entry['download_uri'];
-
-                if (! str_starts_with($uri, 'https://data.scryfall.io/')) {
-                    return null;
-                }
-
-                return [
-                    'download_uri' => $uri,
-                    'size' => $entry['size'],
-                ];
-            }
-        }
-
-        return null;
-    }
-
-    private function downloadFile(string $url, string $destination, int $totalBytes): bool
-    {
-        $directory = dirname($destination);
-
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
-        $showProgress = ! $this->option('no-progress');
-        $totalMb = round($totalBytes / 1024 / 1024, 1);
-
-        if ($showProgress) {
-            $progressBar = $this->output->createProgressBar($totalBytes);
-            $progressBar->setFormat(" Downloading %current_mb% / {$totalMb} MB [%bar%] %percent:3s%%");
-            $progressBar->setMessage('0', 'current_mb');
-            $progressBar->start();
-        }
-
-        $response = Http::withUserAgent('MtgMCP/1.0')->accept('application/json')
-            ->withOptions([
-                'sink' => $destination,
-                'timeout' => 600,
-                'progress' => $showProgress
-                    ? function (int $downloadTotal, int $downloadedBytes) use (&$progressBar) {
-                        if ($downloadedBytes > 0) {
-                            $progressBar->setMessage((string) round($downloadedBytes / 1024 / 1024, 1), 'current_mb');
-                            $progressBar->setProgress($downloadedBytes);
-                        }
-                    }
-                    : null,
-            ])
-            ->get($url);
-
-        if ($showProgress) {
-            $progressBar->finish();
-            $this->newLine();
-        }
-
-        if (! $response->successful() && ! file_exists($destination)) {
-            $this->error('Failed to download bulk data.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function importRulings(string $filePath): int
+    private function importRulings(BulkDataService $bulkData, string $filePath): int
     {
         $stream = gzopen($filePath, 'rb');
 
@@ -152,6 +82,7 @@ class ImportScryfallRulings extends Command
         $batch = [];
         $count = 0;
         $showProgress = ! $this->option('no-progress');
+        $progressBar = null;
 
         if ($showProgress) {
             $progressBar = $this->output->createProgressBar();
@@ -165,20 +96,20 @@ class ImportScryfallRulings extends Command
             $count++;
 
             if (count($batch) >= self::BATCH_SIZE) {
-                $this->upsertBatch($batch);
+                $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
                 $batch = [];
 
-                if ($showProgress) {
+                if ($progressBar !== null) {
                     $progressBar->setProgress($count);
                 }
             }
         }
 
         if (count($batch) > 0) {
-            $this->upsertBatch($batch);
+            $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
         }
 
-        if ($showProgress) {
+        if ($progressBar !== null) {
             $progressBar->setProgress($count);
             $progressBar->finish();
             $this->newLine();
@@ -187,16 +118,6 @@ class ImportScryfallRulings extends Command
         gzclose($stream);
 
         return $count;
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $batch
-     */
-    private function upsertBatch(array $batch): void
-    {
-        Ruling::upsert($batch, ['content_hash'], [
-            'oracle_id', 'source', 'published_at', 'comment', 'updated_at',
-        ]);
     }
 
     /**
