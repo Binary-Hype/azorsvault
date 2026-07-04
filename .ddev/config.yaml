@@ -1,4 +1,4 @@
-name: mtg-mcp
+name: azorsvault
 type: laravel
 docroot: public
 php_version: "8.4"
