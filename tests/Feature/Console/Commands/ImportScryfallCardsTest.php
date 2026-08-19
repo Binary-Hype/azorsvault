@@ -300,3 +300,68 @@ test('it sets cache key after successful import', function () {
 
     expect(Cache::get('scryfall:last_import'))->toBe(now()->toDateString());
 });
+
+test('it imports distinct cards that share a set and collector number', function () {
+    // Scryfall occasionally reissues the `id` for an existing print (e.g. art
+    // or data corrections), so `set` + `collector_number` is not guaranteed
+    // unique. Only `id` is a stable identifier.
+    $firstId = fake()->uuid();
+    $secondId = fake()->uuid();
+
+    $gzContent = makeGzippedCardJson([
+        [
+            'id' => $firstId,
+            'oracle_id' => fake()->uuid(),
+            'name' => 'Original Printing',
+            'mana_cost' => '{R}',
+            'cmc' => 1.0,
+            'type_line' => 'Instant',
+            'oracle_text' => 'Deal 3 damage.',
+            'colors' => ['R'],
+            'color_identity' => ['R'],
+            'keywords' => [],
+            'layout' => 'normal',
+            'set' => 'tst',
+            'set_name' => 'Test Set',
+            'collector_number' => '11',
+            'rarity' => 'common',
+            'released_at' => '2024-01-01',
+            'reprint' => false,
+            'digital' => false,
+            'reserved' => false,
+            'games' => ['paper'],
+            'finishes' => ['nonfoil'],
+        ],
+        [
+            'id' => $secondId,
+            'oracle_id' => fake()->uuid(),
+            'name' => 'Reissued Printing',
+            'mana_cost' => '{R}',
+            'cmc' => 1.0,
+            'type_line' => 'Instant',
+            'oracle_text' => 'Deal 3 damage.',
+            'colors' => ['R'],
+            'color_identity' => ['R'],
+            'keywords' => [],
+            'layout' => 'normal',
+            'set' => 'tst',
+            'set_name' => 'Test Set',
+            'collector_number' => '11',
+            'rarity' => 'common',
+            'released_at' => '2024-01-01',
+            'reprint' => false,
+            'digital' => false,
+            'reserved' => false,
+            'games' => ['paper'],
+            'finishes' => ['nonfoil'],
+        ],
+    ]);
+
+    fakeScryfallBulkDataResponse(gzContent: $gzContent);
+
+    $this->artisan('scryfall:import-cards --force --no-progress')
+        ->assertSuccessful();
+
+    expect(Card::find($firstId))->not->toBeNull();
+    expect(Card::find($secondId))->not->toBeNull();
+});
