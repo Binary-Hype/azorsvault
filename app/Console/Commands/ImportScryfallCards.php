@@ -147,22 +147,19 @@ class ImportScryfallCards extends Command
      */
     private function extractCardData(array $card): array
     {
-        $manaCost = $card['mana_cost'] ?? null;
-        $oracleText = $card['oracle_text'] ?? null;
-        $colors = $card['colors'] ?? null;
-        $power = $card['power'] ?? null;
-        $toughness = $card['toughness'] ?? null;
-
         $cardFaces = $card['card_faces'] ?? null;
+        $front = isset($cardFaces[0]) ? (array) $cardFaces[0] : null;
 
-        if ($manaCost === null && isset($cardFaces[0])) {
-            $front = (array) $cardFaces[0];
-            $manaCost = $front['mana_cost'] ?? null;
-            $oracleText = $front['oracle_text'] ?? null;
-            $colors = $front['colors'] ?? null;
-            $power = $front['power'] ?? null;
-            $toughness = $front['toughness'] ?? null;
-        }
+        // Split/adventure-style layouts (e.g. "prepare") keep mana_cost,
+        // colors, power, and toughness on the top-level card but omit
+        // oracle_text there since it differs per face. Transform/modal DFC
+        // layouts omit all of these at the top level. Fall back to the
+        // front face independently for whichever fields are missing.
+        $manaCost = $card['mana_cost'] ?? $front['mana_cost'] ?? null;
+        $oracleText = $card['oracle_text'] ?? $front['oracle_text'] ?? null;
+        $colors = $card['colors'] ?? $front['colors'] ?? null;
+        $power = $card['power'] ?? $front['power'] ?? null;
+        $toughness = $card['toughness'] ?? $front['toughness'] ?? null;
 
         $now = now()->toDateTimeString();
 

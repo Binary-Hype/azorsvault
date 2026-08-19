@@ -222,6 +222,70 @@ test('it extracts front face data for double-faced cards', function () {
     expect($result['colors'])->toBe(json_encode(['U']));
 });
 
+test('it falls back to front face oracle text for split-style layouts', function () {
+    $command = new ImportScryfallCards;
+
+    // Split/adventure-style layouts (e.g. "prepare") keep mana_cost, colors,
+    // power, and toughness on the top-level card but omit oracle_text there
+    // since it differs per face.
+    $scryfallCard = [
+        'id' => 'xyz-789',
+        'oracle_id' => 'uvw-012',
+        'name' => 'Dirgur Focusmage // Braingeyser',
+        'mana_cost' => '{2}{U} // {X}{U}{U}',
+        'cmc' => 3.0,
+        'type_line' => 'Creature — Djinn Monk // Sorcery',
+        'colors' => ['U'],
+        'color_identity' => ['U'],
+        'keywords' => ['Prepared'],
+        'power' => '1',
+        'toughness' => '4',
+        'loyalty' => null,
+        'layout' => 'prepare',
+        'set' => 'soc',
+        'set_name' => 'Spellslinger Odyssey',
+        'collector_number' => '18',
+        'rarity' => 'rare',
+        'released_at' => '2026-04-24',
+        'reprint' => false,
+        'digital' => false,
+        'reserved' => false,
+        'image_uris' => null,
+        'legalities' => ['modern' => 'legal'],
+        'prices' => ['usd' => '1.00'],
+        'edhrec_rank' => null,
+        'flavor_text' => null,
+        'games' => ['paper'],
+        'finishes' => ['nonfoil'],
+        'card_faces' => [
+            [
+                'name' => 'Dirgur Focusmage',
+                'mana_cost' => '{2}{U}',
+                'oracle_text' => 'Instant and sorcery spells you cast cost {1} less to cast.',
+                'colors' => ['U'],
+                'power' => '1',
+                'toughness' => '4',
+            ],
+            [
+                'name' => 'Braingeyser',
+                'mana_cost' => '{X}{U}{U}',
+                'oracle_text' => 'Target player draws X cards.',
+                'colors' => ['U'],
+            ],
+        ],
+        'all_parts' => null,
+    ];
+
+    $reflection = new ReflectionMethod($command, 'extractCardData');
+    $result = $reflection->invoke($command, $scryfallCard);
+
+    expect($result)
+        ->toHaveKey('mana_cost', '{2}{U} // {X}{U}{U}')
+        ->toHaveKey('oracle_text', 'Instant and sorcery spells you cast cost {1} less to cast.')
+        ->toHaveKey('power', '1')
+        ->toHaveKey('toughness', '4');
+});
+
 test('it removes stale cards not present in import', function () {
     $staleCard = Card::factory()->create([
         'name' => 'Stale Card',
