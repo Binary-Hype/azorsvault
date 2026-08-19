@@ -10,7 +10,6 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use JsonMachine\Items;
 
 #[Signature('scryfall:import-rulings {--force : Force import even if already imported today} {--no-progress : Hide progress bars}')]
 #[Description('Download and import Scryfall bulk rulings data')]
@@ -41,7 +40,7 @@ class ImportScryfallRulings extends Command
             return self::FAILURE;
         }
 
-        $storagePath = 'scryfall/rulings.json.gz';
+        $storagePath = 'scryfall/rulings.jsonl.gz';
         $fullPath = storage_path('app/private/'.$storagePath);
 
         $output = $this->option('no-progress') ? null : $this->output;
@@ -77,8 +76,6 @@ class ImportScryfallRulings extends Command
             return 0;
         }
 
-        $items = Items::fromStream($stream);
-
         $batch = [];
         $count = 0;
         $showProgress = ! $this->option('no-progress');
@@ -90,8 +87,7 @@ class ImportScryfallRulings extends Command
             $progressBar->start();
         }
 
-        foreach ($items as $ruling) {
-            $ruling = (array) $ruling;
+        foreach ($this->readJsonLines($stream) as $ruling) {
             $batch[] = $this->extractRulingData($ruling);
             $count++;
 
@@ -118,6 +114,26 @@ class ImportScryfallRulings extends Command
         gzclose($stream);
 
         return $count;
+    }
+
+    /**
+     * Scryfall bulk data files are JSON Lines (one ruling object per line),
+     * not a single top-level JSON array.
+     *
+     * @param  resource  $stream
+     * @return \Generator<int, array<string, mixed>>
+     */
+    private function readJsonLines($stream): \Generator
+    {
+        while (($line = gzgets($stream)) !== false) {
+            $line = trim($line);
+
+            if ($line === '') {
+                continue;
+            }
+
+            yield json_decode($line, true, flags: JSON_THROW_ON_ERROR);
+        }
     }
 
     /**

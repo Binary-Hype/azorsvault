@@ -10,7 +10,6 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use JsonMachine\Items;
 
 #[Signature('scryfall:import-cards {--force : Force import even if already imported today} {--no-progress : Hide progress bars}')]
 #[Description('Download and import Scryfall bulk card data')]
@@ -46,7 +45,7 @@ class ImportScryfallCards extends Command
             return self::FAILURE;
         }
 
-        $storagePath = 'scryfall/default_cards.json.gz';
+        $storagePath = 'scryfall/default_cards.jsonl.gz';
         $fullPath = storage_path('app/private/'.$storagePath);
 
         $output = $this->option('no-progress') ? null : $this->output;
@@ -82,8 +81,6 @@ class ImportScryfallCards extends Command
             return 0;
         }
 
-        $items = Items::fromStream($stream);
-
         $batch = [];
         $count = 0;
         $showProgress = ! $this->option('no-progress');
@@ -95,8 +92,7 @@ class ImportScryfallCards extends Command
             $progressBar->start();
         }
 
-        foreach ($items as $card) {
-            $card = (array) $card;
+        foreach ($this->readJsonLines($stream) as $card) {
             $batch[] = $this->extractCardData($card);
             $count++;
 
@@ -123,6 +119,26 @@ class ImportScryfallCards extends Command
         gzclose($stream);
 
         return $count;
+    }
+
+    /**
+     * Scryfall bulk data files are JSON Lines (one card object per line),
+     * not a single top-level JSON array.
+     *
+     * @param  resource  $stream
+     * @return \Generator<int, array<string, mixed>>
+     */
+    private function readJsonLines($stream): \Generator
+    {
+        while (($line = gzgets($stream)) !== false) {
+            $line = trim($line);
+
+            if ($line === '') {
+                continue;
+            }
+
+            yield json_decode($line, true, flags: JSON_THROW_ON_ERROR);
+        }
     }
 
     /**

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
-function fakeScryfallBulkRulingsResponse(string $downloadUri = 'https://data.scryfall.io/rulings/rulings.json.gz', ?string $gzContent = null): void
+function fakeScryfallBulkRulingsResponse(string $downloadUri = 'https://data.scryfall.io/rulings/rulings.jsonl.gz', ?string $gzContent = null): void
 {
     Http::fake([
         'api.scryfall.com/bulk-data' => Http::response([
@@ -26,7 +26,9 @@ function fakeScryfallBulkRulingsResponse(string $downloadUri = 'https://data.scr
 
 function makeGzippedRulingsJson(array $rulings): string
 {
-    return gzencode(json_encode($rulings));
+    $lines = array_map(fn (array $ruling) => json_encode($ruling), $rulings);
+
+    return gzencode(implode("\n", $lines));
 }
 
 test('it skips import when already imported today', function () {
