@@ -34,7 +34,7 @@ class BulkDataService
                 continue;
             }
 
-            $uri = $entry['download_uri'];
+            $uri = $entry['jsonl_download_uri'];
 
             if (! str_starts_with($uri, self::ALLOWED_DOWNLOAD_PREFIX)) {
                 return null;
@@ -42,7 +42,7 @@ class BulkDataService
 
             return [
                 'download_uri' => $uri,
-                'size' => $entry['size'],
+                'size' => $entry['compressed_size'],
             ];
         }
 

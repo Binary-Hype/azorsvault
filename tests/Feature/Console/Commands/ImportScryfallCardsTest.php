@@ -15,8 +15,8 @@ function fakeScryfallBulkDataResponse(string $downloadUri = 'https://data.scryfa
             'data' => [
                 [
                     'type' => 'default_cards',
-                    'download_uri' => $downloadUri,
-                    'size' => 1024,
+                    'jsonl_download_uri' => $downloadUri,
+                    'compressed_size' => 1024,
                 ],
             ],
         ]),
@@ -80,8 +80,8 @@ test('it rejects download URIs from untrusted domains', function () {
             'data' => [
                 [
                     'type' => 'default_cards',
-                    'download_uri' => 'https://evil.example.com/malicious.json.gz',
-                    'size' => 1024,
+                    'jsonl_download_uri' => 'https://evil.example.com/malicious.json.gz',
+                    'compressed_size' => 1024,
                 ],
             ],
         ]),
