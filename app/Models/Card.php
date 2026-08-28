@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\CardFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Card extends Model
 {
-    /** @use HasFactory<\Database\Factories\CardFactory> */
+    /** @use HasFactory<CardFactory> */
     use HasFactory;
 
     public $incrementing = false;
@@ -39,6 +40,7 @@ class Card extends Model
             'reprint' => 'boolean',
             'digital' => 'boolean',
             'reserved' => 'boolean',
+            'game_changer' => 'boolean',
         ];
     }
 
@@ -63,7 +65,7 @@ class Card extends Model
      */
     public function scopeByNameSearch(Builder $query, string $search): void
     {
-        $query->where('name', 'LIKE', '%' . $search . '%');
+        $query->where('name', 'LIKE', '%'.$search.'%');
     }
 
     /**
@@ -79,7 +81,7 @@ class Card extends Model
      */
     public function scopeByOracleText(Builder $query, string $search): void
     {
-        $query->where('oracle_text', 'LIKE', '%' . $search . '%');
+        $query->where('oracle_text', 'LIKE', '%'.$search.'%');
     }
 
     /**
@@ -87,7 +89,7 @@ class Card extends Model
      */
     public function scopeByTypeLine(Builder $query, string $type): void
     {
-        $query->where('type_line', 'LIKE', '%' . $type . '%');
+        $query->where('type_line', 'LIKE', '%'.$type.'%');
     }
 
     /**
@@ -95,7 +97,7 @@ class Card extends Model
      */
     public function scopeBySubtype(Builder $query, string $subtype): void
     {
-        $query->where('type_line', 'LIKE', '%— %' . $subtype . '%');
+        $query->where('type_line', 'LIKE', '%— %'.$subtype.'%');
     }
 
     /**
@@ -176,7 +178,17 @@ class Card extends Model
      */
     public function scopeByLegality(Builder $query, string $format, string $legality = 'legal'): void
     {
-        $query->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(legalities, ?)) = ?', ['$.' . $format, $legality]);
+        $query->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(legalities, ?)) = ?', ['$.'.$format, $legality]);
+    }
+
+    /**
+     * Filter by the Scryfall "Game Changer" flag used by the Commander bracket system.
+     *
+     * @param  Builder<Card>  $query
+     */
+    public function scopeByGameChanger(Builder $query, bool $isGameChanger = true): void
+    {
+        $query->where('game_changer', $isGameChanger);
     }
 
     /**
@@ -216,6 +228,7 @@ class Card extends Model
             'legalities' => $this->legalities,
             'prices' => $this->prices,
             'edhrec_rank' => $this->edhrec_rank,
+            'game_changer' => $this->game_changer,
             'flavor_text' => $this->flavor_text,
         ];
 

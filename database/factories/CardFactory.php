@@ -21,9 +21,9 @@ class CardFactory extends Factory
             'id' => fake()->uuid(),
             'oracle_id' => fake()->uuid(),
             'name' => ucwords(fake()->words(rand(1, 3), true)),
-            'mana_cost' => '{' . rand(0, 5) . '}{' . $color . '}',
+            'mana_cost' => '{'.rand(0, 5).'}{'.$color.'}',
             'cmc' => fake()->numberBetween(1, 8),
-            'type_line' => 'Creature — ' . fake()->word(),
+            'type_line' => 'Creature — '.fake()->word(),
             'oracle_text' => fake()->sentence(),
             'colors' => [$color],
             'color_identity' => [$color],
@@ -40,6 +40,7 @@ class CardFactory extends Factory
             'reprint' => false,
             'digital' => false,
             'reserved' => false,
+            'game_changer' => false,
             'image_uris' => ['normal' => 'https://example.com/card.jpg'],
             'legalities' => ['standard' => 'legal', 'commander' => 'legal', 'modern' => 'legal'],
             'prices' => ['usd' => (string) fake()->randomFloat(2, 0.10, 50.00)],
@@ -55,7 +56,7 @@ class CardFactory extends Factory
     public function creature(): static
     {
         return $this->state(fn () => [
-            'type_line' => 'Creature — ' . fake()->randomElement(['Human', 'Elf', 'Goblin', 'Dragon', 'Wizard']),
+            'type_line' => 'Creature — '.fake()->randomElement(['Human', 'Elf', 'Goblin', 'Dragon', 'Wizard']),
             'power' => (string) fake()->numberBetween(1, 10),
             'toughness' => (string) fake()->numberBetween(1, 10),
             'keywords' => fake()->randomElements(['Flying', 'Trample', 'Haste', 'Deathtouch', 'Lifelink'], rand(0, 2)),
@@ -78,15 +79,15 @@ class CardFactory extends Factory
         $color = fake()->randomElement(['W', 'U', 'B', 'R', 'G']);
 
         return $this->state(fn () => [
-            'name' => $frontName . ' // ' . $backName,
+            'name' => $frontName.' // '.$backName,
             'layout' => 'transform',
-            'mana_cost' => '{1}{' . $color . '}',
+            'mana_cost' => '{1}{'.$color.'}',
             'oracle_text' => fake()->sentence(),
             'colors' => [$color],
             'card_faces' => [
                 [
                     'name' => $frontName,
-                    'mana_cost' => '{1}{' . $color . '}',
+                    'mana_cost' => '{1}{'.$color.'}',
                     'type_line' => 'Creature — Human',
                     'oracle_text' => fake()->sentence(),
                     'colors' => [$color],

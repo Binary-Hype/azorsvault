@@ -167,3 +167,28 @@ test('it groups by oracle_id to show unique cards', function () {
     $response->assertOk()
         ->assertSee('"count": 1');
 });
+
+test('it filters by game changer', function () {
+    Card::factory()->create(['name' => 'Rhystic Study', 'game_changer' => true]);
+    Card::factory()->create(['name' => 'Divination', 'game_changer' => false]);
+
+    $response = MtgServer::tool(SearchCardsAdvanced::class, ['game_changer' => true]);
+
+    $response->assertOk()
+        ->assertSee('Rhystic Study')
+        ->assertSee('"count": 1');
+});
+
+test('it excludes game changers when the filter is false', function () {
+    Card::factory()->create(['name' => 'Rhystic Study', 'type_line' => 'Enchantment', 'game_changer' => true]);
+    Card::factory()->create(['name' => 'Divination', 'type_line' => 'Enchantment', 'game_changer' => false]);
+
+    $response = MtgServer::tool(SearchCardsAdvanced::class, [
+        'type_line' => 'Enchantment',
+        'game_changer' => false,
+    ]);
+
+    $response->assertOk()
+        ->assertSee('Divination')
+        ->assertSee('"count": 1');
+});

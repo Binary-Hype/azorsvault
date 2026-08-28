@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\Card;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -38,6 +39,7 @@ class SearchCardsAdvanced extends Tool
             'format' => 'nullable|string|max:30',
             'legality' => 'nullable|string|in:legal,not_legal,restricted,banned',
             'max_edhrec_rank' => 'nullable|integer|min:1',
+            'game_changer' => 'nullable|boolean',
             'limit' => 'nullable|integer|min:1|max:50',
         ]);
 
@@ -75,6 +77,10 @@ class SearchCardsAdvanced extends Tool
             $query->byCmc((float) $validated['cmc'], $validated['cmc_operator'] ?? '=');
         }
 
+        if (array_key_exists('game_changer', $validated) && $validated['game_changer'] !== null) {
+            $query->byGameChanger((bool) $validated['game_changer']);
+        }
+
         if (! empty($validated['format'])) {
             $query->byLegality($validated['format'], $validated['legality'] ?? 'legal');
         }
@@ -97,7 +103,7 @@ class SearchCardsAdvanced extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\JsonSchema\Types\Type>
+     * @return array<string, Type>
      */
     public function schema(JsonSchema $schema): array
     {
@@ -141,6 +147,8 @@ class SearchCardsAdvanced extends Tool
                 ->description('Legality status for the format filter. Defaults to "legal".'),
             'max_edhrec_rank' => $schema->integer()
                 ->description('Maximum EDHREC rank. Lower numbers = more popular in Commander. E.g. 100 for top 100 cards.'),
+            'game_changer' => $schema->boolean()
+                ->description('Filter by the official "Game Changer" list used by the Commander bracket system. True returns only Game Changers, false excludes them.'),
             'limit' => $schema->integer()
                 ->description('Maximum number of results to return. Default 20, max 50.'),
         ];

@@ -429,3 +429,63 @@ test('it imports distinct cards that share a set and collector number', function
     expect(Card::find($firstId))->not->toBeNull();
     expect(Card::find($secondId))->not->toBeNull();
 });
+
+test('it extracts the game changer flag', function () {
+    $command = new ImportScryfallCards;
+    $reflection = new ReflectionMethod($command, 'extractCardData');
+
+    $baseCard = [
+        'id' => 'a3f4b2c1-0000-4000-8000-000000000001',
+        'name' => 'Rhystic Study',
+        'layout' => 'normal',
+        'set' => 'pcy',
+        'set_name' => 'Prophecy',
+        'collector_number' => '45',
+        'rarity' => 'common',
+    ];
+
+    expect($reflection->invoke($command, [...$baseCard, 'game_changer' => true]))
+        ->toHaveKey('game_changer', true);
+
+    expect($reflection->invoke($command, [...$baseCard, 'game_changer' => false]))
+        ->toHaveKey('game_changer', false);
+
+    expect($reflection->invoke($command, $baseCard))
+        ->toHaveKey('game_changer', false);
+});
+
+test('it persists the game changer flag on import', function () {
+    $gzContent = makeGzippedCardJson([
+        [
+            'id' => 'a3f4b2c1-0000-4000-8000-000000000001',
+            'oracle_id' => 'b3f4b2c1-0000-4000-8000-000000000002',
+            'name' => 'Rhystic Study',
+            'mana_cost' => '{2}{U}',
+            'cmc' => 3.0,
+            'type_line' => 'Enchantment',
+            'oracle_text' => 'Whenever an opponent casts a spell...',
+            'colors' => ['U'],
+            'color_identity' => ['U'],
+            'keywords' => [],
+            'layout' => 'normal',
+            'set' => 'pcy',
+            'set_name' => 'Prophecy',
+            'collector_number' => '45',
+            'rarity' => 'common',
+            'released_at' => '2000-06-05',
+            'reprint' => false,
+            'digital' => false,
+            'reserved' => false,
+            'game_changer' => true,
+            'games' => ['paper'],
+            'finishes' => ['nonfoil'],
+        ],
+    ]);
+
+    fakeScryfallBulkDataResponse(gzContent: $gzContent);
+
+    $this->artisan('scryfall:import-cards --force --no-progress')
+        ->assertSuccessful();
+
+    expect(Card::where('name', 'Rhystic Study')->first()->game_changer)->toBeTrue();
+});

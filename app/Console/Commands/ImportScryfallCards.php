@@ -23,7 +23,7 @@ class ImportScryfallCards extends Command
         'oracle_id', 'name', 'mana_cost', 'cmc', 'type_line', 'oracle_text',
         'colors', 'color_identity', 'keywords', 'power', 'toughness', 'loyalty',
         'layout', 'set', 'set_name', 'collector_number', 'rarity', 'released_at',
-        'reprint', 'digital', 'reserved', 'image_uris', 'legalities', 'prices',
+        'reprint', 'digital', 'reserved', 'game_changer', 'image_uris', 'legalities', 'prices',
         'edhrec_rank', 'flavor_text', 'games', 'finishes', 'card_faces', 'all_parts',
         'updated_at',
     ];
@@ -186,6 +186,7 @@ class ImportScryfallCards extends Command
             'reprint' => $card['reprint'] ?? false,
             'digital' => $card['digital'] ?? false,
             'reserved' => $card['reserved'] ?? false,
+            'game_changer' => $card['game_changer'] ?? false,
             'image_uris' => json_encode($card['image_uris'] ?? null),
             'legalities' => json_encode($card['legalities'] ?? null),
             'prices' => json_encode($card['prices'] ?? null),
