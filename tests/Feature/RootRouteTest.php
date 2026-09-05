@@ -35,3 +35,11 @@ test('root includes the analytics script', function () {
         ->assertSee('data-domains="azorsvault.cards"', false)
         ->assertSee('data-do-not-track="true"', false);
 });
+
+test('root serves fonts locally without contacting Google', function () {
+    $response = $this->get('/')->assertOk();
+
+    $response->assertDontSee('fonts.googleapis.com', false)
+        ->assertDontSee('fonts.gstatic.com', false)
+        ->assertSee('@font-face', false);
+});

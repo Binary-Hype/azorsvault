@@ -14,7 +14,8 @@
         "laravel/framework": "^13.0",
         "laravel/mcp": "^0.6.4",
         "laravel/tinker": "^3.0",
-        "sentry/sentry-laravel": "^4.27"
+        "sentry/sentry-laravel": "^4.27",
+        "spatie/laravel-google-fonts": "^1.7"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
