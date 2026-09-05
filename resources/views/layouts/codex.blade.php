@@ -1,3 +1,4 @@
+@inject('latinFontPreload', 'App\\Services\\LatinFontPreload')
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +19,10 @@
     <link rel="icon" type="image/jpeg" sizes="736x736" href="/icon.jpeg">
     <link rel="apple-touch-icon" sizes="128x128" href="/icon.png">
     <link rel="shortcut icon" href="/favicon.ico">
+
+    {{-- Ahead of the font CSS: the four latin files render every page, and
+         having them before first paint is what keeps the swap from reflowing. --}}
+    {{ $latinFontPreload->toHtml() }}
 
     @googlefonts
 

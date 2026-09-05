@@ -29,9 +29,10 @@ return [
     'inline' => true,
 
     /*
-     * When preload is set to true, preload meta tags will be generated
-     * in the HTML output to instruct the browser to start fetching the
-     * font files as early as possible, even before the CSS is fully parsed.
+     * This stays false because the package preloads every subset it fetched —
+     * 23 files, most of which these pages never render. App\Services\
+     * LatinFontPreload emits the four latin files instead, which is what the
+     * layout links and what keeps the font swap from shifting the layout.
      */
     'preload' => false,
 
