@@ -26,3 +26,12 @@ test('logo.svg ships as a public asset matching the navbar mark', function () {
     expect($path)->toBeFile();
     expect(file_get_contents($path))->toContain('<svg')->toContain('</svg>');
 });
+
+test('root includes the analytics script', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('https://analytics.notonfire.systems/script.js', false)
+        ->assertSee('data-website-id="01a0726d-09b5-711e-8e63-0579e92d9c4f"', false)
+        ->assertSee('data-domains="azorsvault.cards"', false)
+        ->assertSee('data-do-not-track="true"', false);
+});
