@@ -7,10 +7,17 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-serif: 'Cormorant Garamond', 'Cormorant', ui-serif, Georgia, serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    /*
+     * Kept deliberately short, and free of the ui-sans-serif / ui-serif /
+     * ui-monospace generics Tailwind ships by default. Brave on macOS blocks
+     * layout for ~2.8s before first paint while resolving those, and pays a
+     * similar cost for named families that are not installed. Generic
+     * keywords, system-ui, -apple-system and the emoji families are all free.
+     * Chrome is unaffected either way, so this only shows up for Brave users.
+     */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
 
     --color-ink: #060b1a;
     --color-ink-2: #0b1428;

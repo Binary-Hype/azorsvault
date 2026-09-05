@@ -35,3 +35,19 @@ test('the mist drift animates only compositable properties', function () {
         ->toContain('transform:')
         ->not->toContain('filter:');
 });
+
+/**
+ * Brave on macOS blocks layout for ~2.8s before first paint while resolving
+ * the ui-* generics, which Tailwind would otherwise supply by default.
+ */
+test('the theme font stacks avoid the ui-* generics', function () {
+    /* Comments name the offending generics on purpose, so read declarations only. */
+    $theme = preg_replace('#/\*.*?\*/#s', '', file_get_contents(resource_path('css/app.css')));
+
+    expect($theme)->toContain('--font-sans:')
+        ->toContain('--font-serif:')
+        ->toContain('--font-mono:')
+        ->not->toContain('ui-sans-serif')
+        ->not->toContain('ui-serif')
+        ->not->toContain('ui-monospace');
+});
