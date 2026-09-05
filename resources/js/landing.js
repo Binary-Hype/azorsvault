@@ -39,23 +39,48 @@ document.addEventListener('click', (event) => {
     }
 });
 
-// Typewriter — types data-text after data-start-delay ms on first reveal.
+// Typewriter — reveals the server-rendered text one character at a time.
+// Every character is wrapped and left in the flow from the start, hidden
+// rather than absent, so revealing them cannot reflow the card. Typing by
+// appending text nodes reflowed on every keystroke and shifted the whole
+// grid when the line wrapped.
 document.querySelectorAll('[data-typewriter]').forEach((el) => {
-    const text = el.dataset.text ?? '';
+    const text = el.textContent.trim();
     const startDelay = Number(el.dataset.startDelay ?? 400);
     const speed = 28;
 
-    el.textContent = '';
-    const cursor = document.createElement('span');
-    cursor.className = 'codex-cursor';
-    el.appendChild(cursor);
+    const letters = [...text].map((character) => {
+        const span = document.createElement('span');
+        span.textContent = character;
+        return span;
+    });
+
+    /** Zero-width resting place for the caret once typing finishes. */
+    const tail = document.createElement('span');
+
+    el.replaceChildren(...letters, tail);
+    el.setAttribute('aria-label', text);
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        letters.forEach((letter) => letter.classList.add('is-typed'));
+        return;
+    }
 
     let i = 0;
+    letters[0]?.classList.add('codex-caret');
+
     const tick = () => {
-        if (i >= text.length) return;
-        cursor.insertAdjacentText('beforebegin', text[i]);
+        if (i >= letters.length) return;
+
+        letters[i].classList.remove('codex-caret');
+        letters[i].classList.add('is-typed');
         i += 1;
-        setTimeout(tick, speed + Math.random() * 30);
+
+        (letters[i] ?? tail).classList.add('codex-caret');
+
+        if (i < letters.length) {
+            setTimeout(tick, speed + Math.random() * 30);
+        }
     };
     setTimeout(tick, startDelay);
 });

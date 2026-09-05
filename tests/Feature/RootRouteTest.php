@@ -56,3 +56,10 @@ test('the blurred mist layer is pinned to the viewport', function () {
         ->assertSee('class="codex-mist fixed inset-0', false)
         ->assertDontSee('class="codex-mist absolute', false);
 });
+
+test('typewriter text is server-rendered so the card reserves its final height', function () {
+    $response = $this->get('/')->assertOk();
+
+    $response->assertSee('<span class="codex-typed" data-typewriter data-start-delay="900">find me a blue instant under 3 mana with flash that counters a spell</span>', false)
+        ->assertDontSee('data-text=', false);
+});

@@ -188,13 +188,23 @@ html { scroll-behavior: smooth; }
     100% { transform: translate3d(2%, -1.5%, 0) scale(1.08); }
 }
 
-/* Typewriter cursor */
-.codex-cursor {
-    display: inline-block;
+/* Typewriter — the full text ships in the markup and every character keeps
+   its place in the flow from the start, hidden until typed, so the reveal
+   costs no layout. The caret is an overlay on the next character rather than
+   an element of its own, so it does not take up space either. */
+.codex-typed > span { visibility: hidden; }
+.codex-typed > span.is-typed { visibility: visible; }
+
+.codex-caret { position: relative; }
+
+.codex-caret::after {
+    content: '';
+    visibility: visible;
+    position: absolute;
+    top: 0.1em;
+    left: 0;
     width: 0.5ch;
     height: 1em;
-    vertical-align: -0.12em;
-    margin-left: 1px;
     background: currentColor;
     opacity: 0.85;
     animation: codex-blink 1s step-end infinite;
@@ -214,7 +224,7 @@ html { scroll-behavior: smooth; }
     .codex-mana-disc,
     .codex-mana-disc svg,
     .codex-mist svg,
-    .codex-cursor {
+    .codex-caret::after {
         animation: none;
     }
 }

@@ -116,7 +116,7 @@
                     <div class="font-mono text-[9.5px] tracking-[0.18em] uppercase text-accent/85 mb-2">{{ $q['tag'] }}</div>
                     <div class="codex-quote font-serif italic text-[19px] leading-[1.4] text-parchment">
                         @if (! empty($q['typewriter']))
-                            <span data-typewriter data-text="{{ $q['text'] }}" data-start-delay="900"></span>
+                            <span class="codex-typed" data-typewriter data-start-delay="900">{{ $q['text'] }}</span>
                         @else
                             {{ $q['text'] }}
                         @endif
