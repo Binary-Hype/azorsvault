@@ -49,12 +49,23 @@ html { scroll-behavior: smooth; }
     100% { opacity: 0.85; }
 }
 
-/* Live meta dot pulse */
-.codex-live-dot { animation: codex-pulse 2s ease-in-out infinite; }
+/* Live meta dot pulse — the glow lives on a pseudo-element so the animation
+   touches only opacity and transform (box-shadow cannot be composited). */
+.codex-live-dot { position: relative; }
+
+.codex-live-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    box-shadow: 0 0 10px 1px rgba(122, 217, 162, 0.9);
+    will-change: opacity, transform;
+    animation: codex-pulse 2s ease-in-out infinite;
+}
 
 @keyframes codex-pulse {
-    0%, 100% { box-shadow: 0 0 8px rgba(122, 217, 162, 0.6); }
-    50% { box-shadow: 0 0 14px rgba(122, 217, 162, 0.9); }
+    0%, 100% { opacity: 0.6; transform: scale(0.92); }
+    50% { opacity: 1; transform: scale(1.08); }
 }
 
 /* Query cards — left accent rail + italic quote marks */
@@ -149,25 +160,32 @@ html { scroll-behavior: smooth; }
 @keyframes codex-spin { to { transform: rotate(360deg); } }
 @keyframes codex-spin-back { to { transform: rotate(-360deg); } }
 
-/* Mist parallax — CSS vars set by JS on mousemove */
+/* Mist parallax — CSS vars set by JS on mousemove.
+   Pinned to the viewport rather than the full document: the layer is blurred,
+   and rasterising a page-height blur costs seconds of main-thread paint. */
 .codex-mist {
     --mx: 0;
     --my: 0;
+    contain: paint;
+    transition: transform 0.4s cubic-bezier(.2, .9, .3, 1);
+    transform: translate3d(calc(var(--mx) * -16px), calc(var(--my) * -10px), 0);
 }
 
+/* Blur is static and the drift is transform-only, so the animation composites
+   off the main thread. Animating the blur radius re-rasterises every frame. */
 .codex-mist svg {
     position: absolute;
     inset: -10%;
     width: 120%;
     height: 120%;
-    transition: transform 0.4s cubic-bezier(.2, .9, .3, 1);
-    transform: translate3d(calc(var(--mx) * -16px), calc(var(--my) * -10px), 0);
+    filter: blur(24px);
+    will-change: transform;
     animation: codex-drift 24s ease-in-out infinite alternate;
 }
 
 @keyframes codex-drift {
-    0% { filter: blur(20px); }
-    100% { filter: blur(28px); }
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    100% { transform: translate3d(2%, -1.5%, 0) scale(1.08); }
 }
 
 /* Typewriter cursor */
@@ -191,7 +209,7 @@ html { scroll-behavior: smooth; }
     html { scroll-behavior: auto; }
 
     .codex-stars,
-    .codex-live-dot,
+    .codex-live-dot::after,
     .codex-mana-aura,
     .codex-mana-disc,
     .codex-mana-disc svg,

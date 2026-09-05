@@ -43,3 +43,16 @@ test('root serves fonts locally without contacting Google', function () {
         ->assertDontSee('fonts.gstatic.com', false)
         ->assertSee('@font-face', false);
 });
+
+test('root preconnects to the analytics origin', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('<link rel="preconnect" href="https://analytics.notonfire.systems"', false);
+});
+
+test('the blurred mist layer is pinned to the viewport', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('class="codex-mist fixed inset-0', false)
+        ->assertDontSee('class="codex-mist absolute', false);
+});

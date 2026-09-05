@@ -23,11 +23,13 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <link rel="preconnect" href="https://analytics.notonfire.systems" crossorigin>
+
     <script defer src="https://analytics.notonfire.systems/script.js" data-website-id="01a0726d-09b5-711e-8e63-0579e92d9c4f" data-domains="azorsvault.cards" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true" data-performance="true" referrerpolicy="no-referrer"></script>
 </head>
 <body class="bg-ink text-parchment font-sans antialiased">
     <div class="codex-bg relative min-h-screen isolate overflow-hidden">
-        <div class="codex-mist absolute inset-0 pointer-events-none overflow-hidden opacity-90" data-mist aria-hidden="true">
+        <div class="codex-mist fixed inset-0 pointer-events-none overflow-hidden opacity-90" data-mist aria-hidden="true">
             <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
                 <defs>
                     <radialGradient id="mist-1" cx="50%" cy="50%" r="50%">
