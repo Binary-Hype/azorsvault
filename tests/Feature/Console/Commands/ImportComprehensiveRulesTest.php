@@ -207,3 +207,24 @@ test('it extracts effective date from header', function () {
     expect($reflection->invoke($command, 'These rules are effective as of February 27, 2026.'))->toBe('2026-02-27');
     expect($reflection->invoke($command, 'No date here'))->toBe('2026-01-01');
 });
+
+test('it treats non-breaking space separator lines as blank', function () {
+    $nbsp = "\u{00A0}";
+
+    $txt = str_replace("\n\n", "\n".$nbsp."\n", sampleRulesTxt());
+
+    fakeRulesPageWithDownload(txtContent: $txt);
+
+    $this->artisan('rules:import-comprehensive --force --no-progress')
+        ->assertSuccessful();
+
+    $rule = ComprehensiveRule::byRuleNumber('100.1')->first();
+    expect($rule)->not->toBeNull();
+    expect($rule->content)->toEndWith('multiplayer games.');
+
+    $abandon = ComprehensiveRule::byRuleNumber('glossary:abandon')->first();
+    expect($abandon)->not->toBeNull();
+    expect($abandon->content)->not->toContain('Trample');
+
+    expect(ComprehensiveRule::where('is_glossary', true)->count())->toBe(2);
+});

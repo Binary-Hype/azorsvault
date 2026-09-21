@@ -195,7 +195,7 @@ class ImportComprehensiveRules extends Command
         $glossaryContent = '';
 
         foreach ($lines as $line) {
-            $line = rtrim($line);
+            $line = $this->normalizeLine($line);
 
             if ($inCredits) {
                 continue;
@@ -249,6 +249,15 @@ class ImportComprehensiveRules extends Command
         }
 
         return $rules;
+    }
+
+    /**
+     * Replace non-breaking and other unicode spaces with regular spaces so that
+     * separator lines made of a single non-breaking space count as blank.
+     */
+    private function normalizeLine(string $line): string
+    {
+        return rtrim(preg_replace('/[\p{Zs}\x{FEFF}]/u', ' ', $line) ?? $line);
     }
 
     /**
