@@ -15,14 +15,15 @@
      * keywords, system-ui, -apple-system and the emoji families are all free.
      * Chrome is unaffected either way, so this only shows up for Brave users.
      */
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
-    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-sans: 'Alegreya Sans', system-ui, -apple-system, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-display: 'Tangerine', cursive;
     --font-mono: 'JetBrains Mono', monospace;
 
     --color-ink: #060b1a;
-    --color-ink-2: #0b1428;
+    --color-ink-2: #0c1526;
     --color-parchment: #eae3d0;
     --color-accent: oklch(78% 0.14 227);
-    --color-mist: #7cc4ff;
+    --color-gold: #c9a44c;
+    --color-gold-bright: #d9b969;
     --color-live: #7ad9a2;
 }

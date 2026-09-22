@@ -28,12 +28,14 @@ test('no keyframe animates a box-shadow', function () {
     }
 });
 
-test('the mist drift animates only compositable properties', function () {
-    preg_match('/@keyframes codex-drift \{(?:[^{}]|\{[^{}]*\})*\}/', landingStylesheet(), $matches);
+test('the live dot pulse animates only compositable properties', function () {
+    preg_match('/@keyframes codex-pulse \{(?:[^{}]|\{[^{}]*\})*\}/', landingStylesheet(), $matches);
 
     expect($matches[0] ?? '')
         ->toContain('transform:')
-        ->not->toContain('filter:');
+        ->toContain('opacity:')
+        ->not->toContain('filter:')
+        ->not->toContain('box-shadow:');
 });
 
 /**
@@ -45,7 +47,7 @@ test('the theme font stacks avoid the ui-* generics', function () {
     $theme = preg_replace('#/\*.*?\*/#s', '', file_get_contents(resource_path('css/app.css')));
 
     expect($theme)->toContain('--font-sans:')
-        ->toContain('--font-serif:')
+        ->toContain('--font-display:')
         ->toContain('--font-mono:')
         ->not->toContain('ui-sans-serif')
         ->not->toContain('ui-serif')

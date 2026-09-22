@@ -50,16 +50,35 @@ test('root preconnects to the analytics origin', function () {
         ->assertSee('<link rel="preconnect" href="https://analytics.notonfire.systems"', false);
 });
 
-test('the blurred mist layer is pinned to the viewport', function () {
+/*
+ * The redesign dropped the blurred, mouse-tracked mist layer: rasterising a
+ * page-height blur cost seconds of main-thread paint. The atmosphere is now
+ * flat gradients on .codex-bg, and nothing should reintroduce the overlay.
+ */
+test('the page paints its atmosphere in gradients, not a blurred overlay', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSee('class="codex-mist fixed inset-0', false)
-        ->assertDontSee('class="codex-mist absolute', false);
+        ->assertSee('class="codex-bg', false)
+        ->assertDontSee('codex-mist', false)
+        ->assertDontSee('data-mist', false);
 });
 
-test('typewriter text is server-rendered so the card reserves its final height', function () {
+/*
+ * The typewriter is gone with the redesign. The incantations are plain text in
+ * the markup, so they need no JavaScript to be readable or indexable.
+ */
+test('the incantations are server-rendered text', function () {
     $response = $this->get('/')->assertOk();
 
-    $response->assertSee('<span class="codex-typed" data-typewriter data-start-delay="900" aria-hidden="true">find me a blue instant under 3 mana with flash that counters a spell</span>', false)
-        ->assertDontSee('data-text=', false);
+    $response->assertSee('Find me a blue instant under three mana that answers a spell on the stack.')
+        ->assertDontSee('data-typewriter', false)
+        ->assertDontSee('codex-typed', false);
+});
+
+test('root names every tool the mcp server exposes', function () {
+    $response = $this->get('/')->assertOk();
+
+    foreach (['search-card', 'search-cards', 'search-cards-advanced', 'search-rules', 'get-rule', 'check-legality', 'get-banned-list', 'validate-deck'] as $tool) {
+        $response->assertSee($tool);
+    }
 });

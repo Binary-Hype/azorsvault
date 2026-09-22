@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Mcp\Servers\MtgServer;
 use App\Models\ComprehensiveRule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Number;
+use Illuminate\Support\Str;
 use ReflectionClass;
 use Throwable;
 
@@ -53,14 +55,22 @@ class VaultStatus
     /**
      * The status line segments, ready to join.
      *
+     * The line is written in the landing page's voice: a tool is a key, and
+     * the rules version is the edition the vault swears by.
+     *
      * @return list<string>
      */
     public function segments(): array
     {
-        $segments = ['Live', $this->toolCount().' tools'];
+        $keys = $this->toolCount();
+
+        $segments = [
+            'The vault is awake',
+            Number::spell($keys).' '.Str::plural('key', $keys).' hung on the wall',
+        ];
 
         if ($version = $this->rulesVersion()) {
-            $segments[] = 'Comprehensive Rules '.$version;
+            $segments[] = 'rulings sworn to '.$version;
         }
 
         return $segments;

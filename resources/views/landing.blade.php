@@ -7,191 +7,211 @@
 @endphp
 
 @section('content')
-    {{-- Hero --}}
-    <section class="relative z-10 mx-auto max-w-[960px] flex flex-col items-center text-center px-7 py-16 sm:px-18 sm:py-26">
-        <div class="flex items-center gap-3.5 font-mono text-[11px] tracking-[0.22em] uppercase text-parchment/60 mb-7">
-            <span class="codex-rule"></span>
-            <span>An MCP server for Magic: The Gathering</span>
-            <span class="codex-rule"></span>
+    {{-- The seal --}}
+    <section id="top" class="relative z-10 flex flex-col items-center text-center px-5 py-12 sm:px-22 sm:py-24">
+        <div class="flex flex-wrap items-center justify-center gap-x-4.5 gap-y-1 text-[11px] tracking-[0.18em] uppercase text-gold/85 mb-7 sm:text-[15px] sm:tracking-[0.26em] sm:mb-8">
+            <span class="codex-rule hidden sm:block"></span>
+            <span>Bound for Claude · opened by a whisper</span>
+            <span class="codex-rule codex-rule-end hidden sm:block"></span>
         </div>
 
-        <div class="relative mb-6 w-22 h-22 inline-flex items-center justify-center text-accent" aria-hidden="true">
-            <span class="codex-mana-aura"></span>
-            <span class="codex-mana-disc relative w-full h-full rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 32 32" width="60%" height="60%" fill="none">
-                    <path d="M16 4 C 11 12, 7 16, 7 21 a 9 9 0 0 0 18 0 c 0 -5 -4 -9 -9 -17 z" fill="currentColor" opacity="0.9"/>
-                    <path d="M12 18 C 12 22, 14 24, 16 24" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-                </svg>
-            </span>
+        <div class="relative w-[116px] h-[116px] sm:w-[168px] sm:h-[168px] flex items-center justify-center mb-5">
+            <span class="codex-seal-aura" aria-hidden="true"></span>
+            <x-seal detailed class="relative w-full h-full" stroke="1.2"/>
         </div>
 
-        <h1 class="font-serif font-normal leading-[0.98] tracking-[-0.01em] text-[clamp(56px,8vw,88px)] m-0 mb-[22px]">
-            <span class="italic font-light text-parchment/60 mr-[0.18em]">The</span>
-            <span class="codex-wordmark">Azorsvault</span>
-        </h1>
+        <h1 class="codex-wordmark font-display text-[clamp(86px,11vw,156px)] leading-[0.92] m-0 mb-3.5 text-[#f3ecd9]">The Azorsvault</h1>
 
-        <p class="font-serif italic text-[22px] leading-[1.45] text-parchment/60 max-w-[520px] mb-11">
-            Every card. Every ruling. Every printing.<br>
-            Wired into Claude through one tidy little server.
+        <p class="max-w-[640px] text-[18px] sm:text-[23px] leading-[1.5] sm:leading-[1.55] text-parchment/74 text-pretty m-0 mb-10">
+            Every card ever printed. Every ruling ever argued over. Sealed behind one door, and Claude already knows the knock.
         </p>
 
-        <div class="w-full max-w-[820px] flex flex-col gap-5 mb-8">
-            {{-- Terminal copy block --}}
-            <div class="w-full">
-                <div class="codex-label-lead font-mono text-[10.5px] tracking-[0.18em] uppercase text-white/45 mb-2.5">
-                    Add via the Claude CLI
+        {{-- The plain-spoken part: words of power must be exact. --}}
+        <div class="w-full max-w-[860px] flex flex-col gap-5 mb-9 text-left">
+            <div class="flex flex-col gap-2.5">
+                <div class="flex items-center gap-2.5 font-mono text-[11.5px] tracking-[0.2em] uppercase text-gold/90">
+                    <span class="block w-4 h-px bg-gold/60"></span>
+                    <span>Speak it into your terminal</span>
                 </div>
-                <div class="flex items-stretch bg-ink/70 border border-accent/20 rounded-lg overflow-hidden backdrop-blur-sm hover:border-accent/35 transition-colors text-left">
-                    <pre class="flex-1 m-0 px-4 py-4 font-mono text-[13.5px] leading-[1.5] text-[#e8edf4] whitespace-pre overflow-x-auto"><span class="text-accent mr-2.5 select-none opacity-80">$</span><span>{{ $cliCommand }}</span></pre>
-                    <button
-                        type="button"
-                        data-copy="{{ $cliCommand }}"
-                        aria-label="Copy install command"
-                        class="shrink-0 px-4 min-w-[92px] border-0 border-l border-accent/15 bg-accent/5 text-accent text-xs font-medium tracking-wide cursor-pointer hover:bg-accent/15 hover:text-white transition-colors"
-                    >
-                        <span class="codex-flip">
-                            <span class="codex-flip-face">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1.2"/><path d="M2 9V3a1 1 0 0 1 1-1h6"/></svg>
-                                <span>Copy</span>
-                            </span>
-                            <span class="codex-flip-face codex-flip-face-back">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7.5l3 3 7-7"/></svg>
-                                <span>Copied</span>
-                            </span>
-                        </span>
-                    </button>
+                <div class="flex flex-col sm:flex-row sm:items-stretch bg-ink/85 border border-gold/30 rounded overflow-hidden hover:border-gold/45 transition-colors">
+                    <pre class="flex-1 m-0 px-4 py-4 sm:px-5.5 font-mono text-[12px] sm:text-[14.5px] leading-[1.55] text-[#e8edf4] whitespace-pre-wrap break-all sm:whitespace-pre sm:break-normal sm:overflow-x-auto"><span class="text-accent/80 select-none">$ </span>{{ $cliCommand }}</pre>
+                    <x-copy-button
+                        :value="$cliCommand"
+                        label="Copy the install command"
+                        class="shrink-0 flex items-center justify-center h-11 sm:h-auto sm:min-w-[116px] px-5.5 border-0 border-t sm:border-t-0 sm:border-l border-gold/30 bg-gold/12 text-[#e4c87d] text-[15px] font-medium tracking-[0.04em] cursor-pointer hover:bg-gold/20 hover:text-parchment transition-colors"
+                    />
                 </div>
             </div>
 
-            {{-- Inline copy block --}}
-            <div class="w-full">
-                <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-white/45 mb-2 text-left">
-                    …or paste this URL into the web interface
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-2.5 font-mono text-[11.5px] tracking-[0.2em] uppercase text-parchment/50">
+                    <span class="block w-4 h-px bg-parchment/30"></span>
+                    <span>…or hand this to the web interface</span>
                 </div>
-                <div class="flex items-center gap-2 py-2.5 pl-3.5 pr-2 bg-white/5 border border-white/10 rounded-md hover:bg-accent/5 hover:border-accent/25 transition-colors">
-                    <code class="flex-1 font-mono text-[12.5px] text-white/85 whitespace-nowrap overflow-x-auto text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{{ $mcpUrl }}</code>
-                    <button
-                        type="button"
-                        data-copy="{{ $mcpUrl }}"
-                        aria-label="Copy MCP URL"
-                        class="shrink-0 px-3 py-1.5 border-0 rounded bg-accent/10 text-accent font-medium text-[11.5px] cursor-pointer hover:bg-accent/20 hover:text-white transition-colors"
-                    >
-                        <span class="codex-flip">
-                            <span class="codex-flip-face">
-                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1.2"/><path d="M2 9V3a1 1 0 0 1 1-1h6"/></svg>
-                                <span>Copy</span>
-                            </span>
-                            <span class="codex-flip-face codex-flip-face-back">
-                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7.5l3 3 7-7"/></svg>
-                                <span>Copied</span>
-                            </span>
-                        </span>
-                    </button>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:pl-4.5 bg-parchment/5 border border-parchment/15 rounded hover:border-accent/30 transition-colors">
+                    <code class="flex-1 font-mono text-[12px] sm:text-[13.5px] text-white/88 break-all sm:break-normal">{{ $mcpUrl }}</code>
+                    <x-copy-button
+                        :value="$mcpUrl"
+                        label="Copy the vault address"
+                        class="shrink-0 flex items-center justify-center h-11 sm:h-auto px-4.5 py-2.5 border border-accent/28 rounded-[3px] bg-accent/10 text-[#9ed3ff] text-[14.5px] font-medium cursor-pointer hover:bg-accent/20 hover:text-parchment transition-colors"
+                    />
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center gap-2.5 font-mono text-[11.5px] tracking-wider text-parchment/60">
-            <span class="codex-live-dot w-[7px] h-[7px] rounded-full bg-live"></span>
+        <div class="flex items-center gap-3 text-[15px] sm:text-[16px] text-parchment/62 text-left">
+            <span class="codex-live-dot shrink-0 w-2 h-2 rounded-full bg-live"></span>
             <span>{{ implode(' · ', $vaultStatus->segments()) }}</span>
         </div>
     </section>
 
-    {{-- Example queries --}}
-    <section id="queries" class="relative z-10 py-20 px-7 border-t border-parchment/15 sm:px-18">
-        <div class="max-w-[720px] mx-auto mb-12 text-center">
-            <div class="font-mono text-[11px] tracking-[0.22em] uppercase text-accent mb-3.5">I.&nbsp; Example Incantations</div>
-            <h2 class="font-serif italic font-normal text-[clamp(34px,4vw,44px)] leading-tight tracking-tight m-0">Try asking Claude…</h2>
-        </div>
+    {{-- I. Incantations --}}
+    <section id="incantations" class="relative z-10 px-5 py-14 sm:px-22 sm:py-22 border-t border-gold/20">
+        <x-chapter numeral="I" name="Incantations" heading="Say these out loud">
+            No syntax to memorise. Claude picks the key and turns it for you.
+        </x-chapter>
 
-        <div class="max-w-[1080px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="max-w-[1180px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6.5">
             @foreach ([
-                ['tag' => 'search-cards-advanced', 'text' => 'find me a blue instant under 3 mana with flash that counters a spell', 'typewriter' => true],
-                ['tag' => 'search-rules',          'text' => 'how does the layers system handle a creature copying another?'],
-                ['tag' => 'search-cards-advanced', 'text' => 'top 20 commanders in Sultai colors by EDHREC rank'],
-                ['tag' => 'search-card',           'text' => 'show me Delver of Secrets // Insectile Aberration'],
-                ['tag' => 'get-rule',              'text' => 'pull rule 702.3 — Defender, in full'],
-                ['tag' => 'search-cards',          'text' => 'check my decklist of 60 names against the printing database'],
-            ] as $q)
-                <article class="codex-query relative py-5.5 pl-7 pr-6 bg-white/[0.025] border border-white/10 rounded-md hover:bg-accent/5 hover:border-accent/25 hover:-translate-y-px hover:shadow-[0_8px_24px_-8px_rgba(124,196,255,0.15)] transition-all">
-                    <div class="font-mono text-[9.5px] tracking-[0.18em] uppercase text-accent/85 mb-2">{{ $q['tag'] }}</div>
-                    <div class="codex-quote font-serif italic text-[19px] leading-[1.4] text-parchment">
-                        @if (! empty($q['typewriter']))
-                            {{-- Characters are visibility:hidden until typed, which removes them
-                                 from the accessibility tree, so expose a static copy instead. --}}
-                            <span class="codex-typed" data-typewriter data-start-delay="900" aria-hidden="true">{{ $q['text'] }}</span>
-                            <span class="sr-only">{{ $q['text'] }}</span>
-                        @else
-                            {{ $q['text'] }}
-                        @endif
-                    </div>
+                ['tool' => 'search-cards-advanced', 'ask' => 'Find me a blue instant under three mana that answers a spell on the stack.'],
+                ['tool' => 'search-rules',          'ask' => 'Untangle the layers for me — my creature copied theirs and then grew.'],
+                ['tool' => 'search-cards-advanced', 'ask' => 'Name the twenty Sultai commanders the tables love most.'],
+                ['tool' => 'search-card',           'ask' => 'Show me both faces of Delver of Secrets.'],
+                ['tool' => 'get-rule',              'ask' => 'Read me 702.3 — Defender — word for word.'],
+                ['tool' => 'search-cards',          'ask' => 'Here are sixty names from my deck — tell me which ones are real.'],
+                ['tool' => 'validate-deck',         'ask' => 'Weigh my Commander list — anything banned, off-colour or doubled up?'],
+                ['tool' => 'get-banned-list',       'ask' => 'What is banned in Commander these days?'],
+            ] as $incantation)
+                <article class="flex flex-col gap-3 p-5 md:px-7.5 md:py-7 bg-ink-2/72 border border-gold/22 rounded-[3px] hover:border-gold/40 hover:bg-ink-2 transition-colors">
+                    <div class="font-mono text-[10px] md:text-[10.5px] tracking-[0.2em] uppercase text-accent/80">{{ $incantation['tool'] }}</div>
+                    <div class="italic text-[19px] md:text-[22px] leading-[1.42] text-parchment">&ldquo;{{ $incantation['ask'] }}&rdquo;</div>
                 </article>
             @endforeach
         </div>
     </section>
 
-    {{-- Filter apparatus --}}
-    <section id="filters" class="relative z-10 py-20 px-7 border-t border-parchment/15 bg-ink-2/50 sm:px-18">
-        <div class="max-w-[720px] mx-auto mb-12 text-center">
-            <div class="font-mono text-[11px] tracking-[0.22em] uppercase text-accent mb-3.5">II.&nbsp; The Filtering Apparatus</div>
-            <h2 class="font-serif italic font-normal text-[clamp(34px,4vw,44px)] leading-snug tracking-tight m-0 mb-4">
-                <code class="font-mono not-italic text-[0.78em] align-middle px-2 py-0.5 rounded border border-accent/20 bg-accent/10 text-accent">search-cards-advanced</code>
-                · every filter, AND-combined.
-            </h2>
-            <p class="text-[15px] leading-relaxed text-parchment/60 m-0">
-                Multi-filter search across the printings database. Results deduped by oracle_id, max 50.
-                Pass at least one non-meta filter; the rest compose freely.
-            </p>
-        </div>
+    {{-- II. The Sieve --}}
+    <section id="sieve" class="codex-band relative z-10 px-5 py-14 sm:px-22 sm:py-22 border-t border-gold/20">
+        <x-chapter numeral="II" name="The Sieve" heading="Fifteen ways to narrow a fate" :wide="true">
+            Every sieve below can be laid over the others at once. Ask for one, ask for nine. What falls through is
+            deduplicated by oracle identity, fifty at most.
+        </x-chapter>
 
-        <div class="max-w-[1080px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-parchment/15">
+        <div class="max-w-[1180px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gold/20 border border-gold/20">
             @foreach ([
-                ['k' => 'name',                'v' => 'fulltext, partial'],
-                ['k' => 'mana_cost',           'v' => 'exact, e.g. {2}{R}{R}'],
-                ['k' => 'oracle_text',         'v' => 'fulltext, partial'],
-                ['k' => 'type_line',           'v' => 'partial, e.g. Legendary Creature'],
-                ['k' => 'subtype',             'v' => 'after the em-dash, e.g. Wizard'],
-                ['k' => 'colors',              'v' => 'W/U/B/R/G — must contain ALL'],
-                ['k' => 'color_identity',     'v' => 'W/U/B/R/G — Commander identity'],
-                ['k' => 'rarity',              'v' => 'common · uncommon · rare · mythic'],
-                ['k' => 'set',                 'v' => 'set code, e.g. neo'],
-                ['k' => 'keyword',             'v' => 'e.g. Flying'],
-                ['k' => 'power · toughness',  'v' => 'string — allows *'],
-                ['k' => 'cmc + cmc_operator',  'v' => '= · < · > · <= · >='],
-                ['k' => 'format',              'v' => 'standard · commander · modern · …'],
-                ['k' => 'legality',            'v' => 'legal · not_legal · restricted · banned'],
-                ['k' => 'max_edhrec_rank',     'v' => 'lower = more popular'],
-            ] as $f)
-                <div class="flex flex-col gap-1.5 px-5.5 py-4.5 bg-ink-2/60 hover:bg-accent/5 transition-colors border-r border-b border-parchment/15">
-                    <div class="font-serif italic text-[17px] text-parchment">{{ $f['k'] }}</div>
-                    <div class="font-mono text-xs text-accent/85">{{ $f['v'] }}</div>
+                ['filter' => 'name',              'reads' => 'whole or part, spelled loosely'],
+                ['filter' => 'mana_cost',         'reads' => 'exactly, as written: {2}{R}{R}'],
+                ['filter' => 'oracle_text',       'reads' => "any phrase in the card's own words"],
+                ['filter' => 'type_line',         'reads' => 'Legendary Creature, and the like'],
+                ['filter' => 'subtype',           'reads' => 'whatever follows the em-dash'],
+                ['filter' => 'colors',            'reads' => 'W U B R G — all of them, together'],
+                ['filter' => 'color_identity',    'reads' => 'what a commander permits'],
+                ['filter' => 'rarity',            'reads' => 'common · uncommon · rare · mythic'],
+                ['filter' => 'set',               'reads' => 'the three letters on the spine'],
+                ['filter' => 'keyword',           'reads' => 'Flying, Ward, Cascade…'],
+                ['filter' => 'power · toughness', 'reads' => 'asterisks welcome'],
+                ['filter' => 'cmc + cmc_operator','reads' => '= · < · > · <= · >='],
+                ['filter' => 'format',            'reads' => 'standard · commander · modern…'],
+                ['filter' => 'legality',          'reads' => 'legal · not_legal · restricted · banned'],
+                ['filter' => 'max_edhrec_rank',   'reads' => 'lower means better loved'],
+            ] as $sieve)
+                <div class="flex flex-col gap-1.5 px-6 py-5 bg-[#08101f] hover:bg-ink-2 transition-colors">
+                    <div class="font-mono text-[13.5px] text-parchment">{{ $sieve['filter'] }}</div>
+                    <div class="text-[15.5px] text-parchment/58">{{ $sieve['reads'] }}</div>
                 </div>
             @endforeach
         </div>
     </section>
 
-    {{-- Tools list --}}
-    <section id="tools" class="relative z-10 py-20 px-7 border-t border-parchment/15 sm:px-18">
-        <div class="max-w-[720px] mx-auto mb-12 text-center">
-            <div class="font-mono text-[11px] tracking-[0.22em] uppercase text-accent mb-3.5">III.&nbsp; The Five Tools</div>
-            <h2 class="font-serif italic font-normal text-[clamp(34px,4vw,44px)] leading-tight tracking-tight m-0">A small surface, deliberately.</h2>
-        </div>
+    {{-- III. The Weighing --}}
+    <section id="weighing" class="relative z-10 px-5 py-14 sm:px-22 sm:py-22 border-t border-gold/20">
+        <x-chapter numeral="III" name="The Weighing" heading="Hand over your hundred" :wide="true">
+            Paste a Commander list as it left your deckbuilder. The vault counts it, weighs every card against the
+            format's laws, and tells you plainly what is wrong.
+        </x-chapter>
 
-        <div class="max-w-[1080px] mx-auto flex flex-col">
-            @foreach ([
-                ['i' => '01', 'n' => 'search-card',           'd' => 'Find a single card by exact name (case-insensitive). Returns the most recent printing.',                   'a' => 'name'],
-                ['i' => '02', 'n' => 'search-cards',          'd' => 'Batch lookup by exact names — for decklists. Returns name → card | null.',                                'a' => 'names[1–100]'],
-                ['i' => '03', 'n' => 'search-cards-advanced', 'd' => 'Multi-filter search; all filters AND-combined. Deduped by oracle_id, max 50.',                            'a' => '15 filters · see above'],
-                ['i' => '04', 'n' => 'search-rules',          'd' => 'Keyword search across the Comprehensive Rules and glossary.',                                              'a' => 'query · section · chapter'],
-                ['i' => '05', 'n' => 'get-rule',              'd' => 'Fetch a precise rule, chapter, section, or glossary term — dispatch-routed by shape.',                    'a' => 'rule_number'],
-            ] as $tool)
-                <div class="grid grid-cols-[40px_1fr] gap-4 md:grid-cols-[60px_1fr_auto] md:gap-6 items-center py-5 px-2 border-t border-parchment/15 last:border-b hover:bg-accent/5 hover:pl-4 transition-all">
-                    <div class="font-serif italic text-[28px] text-accent opacity-70">{{ $tool['i'] }}</div>
-                    <div>
-                        <div class="font-mono text-base text-parchment mb-1.5 font-medium">{{ $tool['n'] }}</div>
-                        <div class="text-sm text-parchment/60 leading-relaxed max-w-[560px]">{{ $tool['d'] }}</div>
+        <div class="max-w-[1180px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-6 lg:gap-10 items-start">
+            <div class="flex flex-col p-5 sm:px-8.5 sm:pt-7.5 sm:pb-6 bg-ink-2/72 border border-gold/22 rounded-[3px]">
+                <div class="font-mono text-[10.5px] tracking-[0.2em] uppercase text-accent/80 mb-2">validate-deck</div>
+                <div class="font-display text-[38px] sm:text-[46px] leading-none text-[#f3ecd9] mb-2.5">What the scales test</div>
+
+                @foreach ([
+                    ['law' => 'A hundred, counted',        'note' => 'Commander asks for exactly one hundred cards, the commander among them.'],
+                    ['law' => 'One of each',               'note' => 'Only basic lands may be doubled. Everything else is singleton.'],
+                    ['law' => 'A commander who may lead',  'note' => 'Legendary, or bearing the line that says it can. Two only under Partner or a Background.'],
+                    ['law' => 'Nothing banned',            'note' => 'Every card weighed against the Commander banned list.'],
+                    ['law' => 'Inside the colours',        'note' => "No card may carry a colour its commander's identity does not."],
+                    ['law' => 'Game Changers, counted',    'note' => 'How many you are carrying, and the lowest bracket that still allows them.'],
+                ] as $scale)
+                    <div class="grid grid-cols-[22px_minmax(0,1fr)] gap-4 py-3.5 border-t border-gold/14">
+                        <svg viewBox="0 0 22 22" fill="none" class="w-[22px] h-[22px] mt-0.5" aria-hidden="true">
+                            <circle cx="11" cy="11" r="10" stroke="currentColor" class="text-gold/50" stroke-width="1"/>
+                            <path d="M6.5 11.2l3 3 6-6.4" stroke="currentColor" class="text-gold-bright" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="flex flex-col gap-1">
+                            <div class="text-[17px] sm:text-[18px] text-parchment">{{ $scale['law'] }}</div>
+                            <div class="text-[15.5px] sm:text-base leading-normal text-parchment/60">{{ $scale['note'] }}</div>
+                        </div>
                     </div>
-                    <div class="col-start-2 md:col-start-auto font-mono text-[11.5px] text-accent/70 text-left md:text-right tracking-wide">{{ $tool['a'] }}</div>
+                @endforeach
+            </div>
+
+            <div class="flex flex-col gap-4.5 p-5 sm:p-8.5 bg-ink/60 border border-gold/22 rounded-[3px]">
+                <div class="flex flex-col gap-2.5">
+                    <div class="font-mono text-[10.5px] tracking-[0.2em] uppercase text-gold/90">Lists it can read</div>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (['Moxfield', 'Archidekt', 'MTG Arena'] as $export)
+                            <span class="px-3.5 py-1.5 border border-gold/32 rounded-full text-[15px] text-parchment">{{ $export }}</span>
+                        @endforeach
+                        <span class="px-3.5 py-1.5 border border-parchment/16 rounded-full text-[15px] text-parchment/60">plain text</span>
+                    </div>
+                </div>
+
+                <pre class="m-0 px-5 py-4.5 bg-ink/85 border border-parchment/10 rounded-[3px] font-mono text-[12px] sm:text-[13px] leading-[1.75] text-white/82 overflow-x-auto">Commander
+1 Atraxa, Grand Unifier
+
+Deck
+1 Sol Ring
+1x Cultivate (m21) 177
+10 Forest
+
+Sideboard
+1 Nature's Claim</pre>
+
+                <p class="m-0 text-base leading-[1.55] text-parchment/60">
+                    One card to a line, with or without the set and collector number. Section headers are understood —
+                    and sideboards, maybeboards and token piles are left out of the count, then named in the answer so
+                    you know what was set aside.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    {{-- IV. The Eight Keys --}}
+    <section id="keys" class="relative z-10 px-5 py-14 sm:px-22 sm:py-22 border-t border-gold/20">
+        <x-chapter numeral="IV" name="The Eight Keys" heading="A small ring, on purpose">
+            Eight doors is all the vault has. Anything worth asking fits through one of them.
+        </x-chapter>
+
+        <div class="max-w-[1180px] mx-auto flex flex-col">
+            @foreach ([
+                ['n' => 'I',    'tool' => 'search-card',           'does' => 'One card, called by its true name. The vault hands back its newest printing.',                                                              'takes' => 'name'],
+                ['n' => 'II',   'tool' => 'search-cards',          'does' => 'A whole roll call at once — for decklists. Each name comes back with its card, or with nothing.',                                          'takes' => 'names[1–100]'],
+                ['n' => 'III',  'tool' => 'search-cards-advanced', 'does' => 'The Sieve itself. Stack any of the fifteen filters; fifty results come through, no duplicates.',                                           'takes' => '15 filters'],
+                ['n' => 'IV',   'tool' => 'search-rules',          'does' => 'Hunt a phrase through the Comprehensive Rules and the glossary that guards them.',                                                         'takes' => 'query · section · chapter'],
+                ['n' => 'V',    'tool' => 'get-rule',              'does' => 'One rule, one chapter, one section, one glossary term — whichever shape you ask in. Ask for 702.19 and its lettered subrules come with it.', 'takes' => 'rule_number'],
+                ['n' => 'VI',   'tool' => 'check-legality',        'does' => 'Where a card may be played, and where it is forbidden. Also whether it is a Game Changer, and whether the Reserved List guards it.',       'takes' => 'name'],
+                ['n' => 'VII',  'tool' => 'get-banned-list',       'does' => "A format's whole banned or restricted roll, called out in alphabetical order.",                                                            'takes' => 'format · status'],
+                ['n' => 'VIII', 'tool' => 'validate-deck',         'does' => 'A hundred cards weighed against the Commander laws — singleton, colour identity, legality, an eligible commander — and the bracket your Game Changers put you in.', 'takes' => 'decklist · commanders'],
+            ] as $key)
+                <div class="grid grid-cols-[44px_minmax(0,1fr)] md:grid-cols-[90px_minmax(0,1fr)_260px] gap-3.5 md:gap-7 items-start md:items-center py-4.5 md:py-6.5 px-1 md:px-4 border-t border-gold/18 last:border-b hover:bg-gold/5 transition-colors">
+                    <div class="flex items-center justify-center w-11 h-11 md:w-[58px] md:h-[58px] rounded-full border border-gold/55 bg-gold/8 text-gold-bright text-[14px] md:text-[17px] font-medium tracking-[0.1em] indent-[0.1em]">{{ $key['n'] }}</div>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="font-mono text-[14px] md:text-base text-parchment">{{ $key['tool'] }}</div>
+                        <div class="text-base md:text-[17px] leading-[1.5] text-parchment/62 max-w-[620px]">{{ $key['does'] }}</div>
+                        <div class="md:hidden font-mono text-xs text-accent/75">{{ $key['takes'] }}</div>
+                    </div>
+                    <div class="hidden md:block font-mono text-[13px] text-accent/75 text-right">{{ $key['takes'] }}</div>
                 </div>
             @endforeach
         </div>

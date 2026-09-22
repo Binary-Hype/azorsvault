@@ -3,6 +3,7 @@
 use App\Models\ComprehensiveRule;
 use App\Services\VaultStatus;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Number;
 
 /*
  * Truncation rather than a transaction: the fulltext tests commit their rows,
@@ -29,7 +30,7 @@ test('it derives the rules version from the imported rules', function () {
 
 test('it omits the rules version when nothing has been imported', function () {
     expect(app(VaultStatus::class)->rulesVersion())->toBeNull();
-    expect(app(VaultStatus::class)->segments())->not->toContain('Comprehensive Rules');
+    expect(app(VaultStatus::class)->segments())->not->toContain('rulings sworn to');
 });
 
 test('it builds the full status line once rules are present', function () {
@@ -38,7 +39,7 @@ test('it builds the full status line once rules are present', function () {
     $tools = count(glob(app_path('Mcp/Tools/*.php')) ?: []);
 
     expect(app(VaultStatus::class)->segments())
-        ->toBe(['Live', $tools.' tools', 'Comprehensive Rules v2026.02.27']);
+        ->toBe(['The vault is awake', Number::spell($tools).' keys hung on the wall', 'rulings sworn to v2026.02.27']);
 });
 
 test('the landing page renders the derived status line', function () {
@@ -48,5 +49,5 @@ test('the landing page renders the derived status line', function () {
 
     $this->get('/')
         ->assertOk()
-        ->assertSee('Live · '.$tools.' tools · Comprehensive Rules v2026.02.27');
+        ->assertSee('The vault is awake · '.Number::spell($tools).' keys hung on the wall · rulings sworn to v2026.02.27');
 });

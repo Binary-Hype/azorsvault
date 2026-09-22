@@ -1,1 +1,1 @@
-<h3 class="font-serif italic font-normal text-[20px] leading-tight text-parchment mt-8 mb-3">{{ $slot }}</h3>
+<h3 class="font-medium text-[18px] leading-snug text-parchment/90 mt-8 mb-3">{{ $slot }}</h3>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Azorsvault — MTG MCP for Claude')</title>
-    <meta name="description" content="@yield('description', 'An MCP server for Magic: The Gathering. Every card, every ruling, every printing — wired into Claude through one tidy little server.')">
+    <meta name="description" content="@yield('description', 'An MCP server for Magic: The Gathering. Every card ever printed, every ruling ever argued over — sealed in one vault, and Claude already knows the knock.')">
 
     <meta property="og:type" content="website">
     <meta property="og:title" content="@yield('og_title', 'Azorsvault — MTG MCP for Claude')">
@@ -23,11 +23,11 @@
     <link rel="apple-touch-icon" sizes="128x128" href="/icon.png">
     <link rel="shortcut icon" href="/favicon.ico">
 
-    {{-- Ahead of the font CSS: the four latin files render every page, and
-         having them before first paint is what keeps the swap from reflowing. --}}
+    {{-- Ahead of the font CSS: the latin files render every page, and having
+         them before first paint is what keeps the swap from reflowing. --}}
     {{ $latinFonts->toHtml() }}
 
-    {{-- Only the basic-latin @font-face rules; the package would inline all 82. --}}
+    {{-- Only the basic-latin @font-face rules; the package would inline all of them. --}}
     {{ $latinFonts->toStyleTag() }}
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -38,65 +38,47 @@
 </head>
 <body class="bg-ink text-parchment font-sans antialiased">
     <div class="codex-bg relative min-h-screen isolate overflow-hidden">
-        <div class="codex-mist fixed inset-0 pointer-events-none overflow-hidden opacity-90" data-mist aria-hidden="true">
-            <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
-                <defs>
-                    <radialGradient id="mist-1" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="rgba(124,196,255,0.25)"/>
-                        <stop offset="60%" stop-color="rgba(124,196,255,0.05)"/>
-                        <stop offset="100%" stop-color="rgba(124,196,255,0)"/>
-                    </radialGradient>
-                    <radialGradient id="mist-2" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="rgba(180,220,255,0.20)"/>
-                        <stop offset="100%" stop-color="rgba(180,220,255,0)"/>
-                    </radialGradient>
-                </defs>
-                <ellipse cx="280" cy="220" rx="380" ry="160" fill="url(#mist-1)"/>
-                <ellipse cx="900" cy="600" rx="420" ry="180" fill="url(#mist-1)"/>
-                <ellipse cx="700" cy="200" rx="240" ry="100" fill="url(#mist-2)"/>
-                <ellipse cx="200" cy="640" rx="200" ry="90" fill="url(#mist-2)"/>
-            </svg>
-        </div>
-
-        <div class="codex-stars absolute inset-0 pointer-events-none opacity-70 z-0" aria-hidden="true"></div>
-
-        <header class="relative z-10 flex items-center justify-between gap-4 flex-wrap px-7 py-6 border-b border-parchment/15 sm:px-18">
-            <a href="{{ url('/') }}" class="flex items-center gap-3 font-serif text-parchment no-underline">
-                <span class="codex-glyph-glow text-accent text-[22px] leading-none -translate-y-px">⟁</span>
-                <span class="text-[19px] font-medium tracking-[0.06em]">Azorsvault</span>
+        <header class="relative z-10 flex items-center justify-between gap-x-6 gap-y-3 flex-wrap px-5 py-5 border-b border-gold/25 sm:px-22 sm:py-6">
+            <a href="{{ url('/') }}" class="flex items-center gap-3.5 text-parchment no-underline">
+                <x-seal class="w-[34px] h-[34px]" stroke="1.6"/>
+                <span class="font-display text-[40px] leading-none tracking-[0.01em]">Azorsvault</span>
             </a>
-            <nav class="flex items-center gap-7 text-[13px] text-parchment/60">
-                <a href="{{ url('/#queries') }}" class="hover:text-parchment transition-colors">Examples</a>
-                <a href="{{ url('/#filters') }}" class="hover:text-parchment transition-colors">Filters</a>
-                <a href="{{ url('/#tools') }}" class="hover:text-parchment transition-colors">Tools</a>
-                <a href="https://github.com/Binary-Hype" class="text-accent font-mono text-xs hover:opacity-80 transition-opacity">GitHub ↗</a>
+            <nav class="flex flex-wrap items-center justify-end gap-x-5 gap-y-1.5 text-[14px] sm:gap-x-7 sm:text-[15px] tracking-[0.02em]">
+                <a href="{{ url('/#incantations') }}" class="text-parchment/72 hover:text-parchment transition-colors">Incantations</a>
+                <a href="{{ url('/#sieve') }}" class="text-parchment/72 hover:text-parchment transition-colors">The Sieve</a>
+                <a href="{{ url('/#weighing') }}" class="text-parchment/72 hover:text-parchment transition-colors">The Weighing</a>
+                <a href="{{ url('/#keys') }}" class="text-parchment/72 hover:text-parchment transition-colors">The Eight Keys</a>
+                <a href="https://github.com/Binary-Hype" class="text-accent font-mono text-[13px] hover:opacity-80 transition-opacity">GitHub ↗</a>
             </nav>
         </header>
 
         @yield('content')
 
-        <footer class="relative z-10 border-t border-parchment/15 px-7 pt-15 pb-8 bg-ink/60 sm:px-18">
-            <div class="max-w-[1080px] mx-auto grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 mb-12">
-                <div class="flex items-center gap-3 font-serif text-[22px] text-parchment">
-                    <span class="codex-glyph-glow text-accent">⟁</span>
-                    <span>Azorsvault</span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
-                    <div class="flex flex-col gap-2.5 text-[13px]">
-                        <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-accent mb-1.5">Resources</div>
-                        <a href="https://modelcontextprotocol.io" class="text-parchment/60 hover:text-parchment transition-colors">MCP spec</a>
-                        <a href="https://magic.wizards.com/en/rules" class="text-parchment/60 hover:text-parchment transition-colors">Comprehensive Rules</a>
-                        <a href="https://scryfall.com/docs/api" class="text-parchment/60 hover:text-parchment transition-colors">Scryfall API</a>
+        <footer class="relative z-10 border-t border-gold/25 bg-ink/60 px-5 pt-12 pb-8 sm:px-22 sm:pt-16 sm:pb-9">
+            <div class="max-w-[1180px] mx-auto grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-12 md:gap-18">
+                <div class="flex flex-col gap-3.5">
+                    <div class="flex items-center gap-3.5">
+                        <x-seal class="w-[30px] h-[30px]" stroke="1.6"/>
+                        <span class="font-display text-[42px] leading-none">Azorsvault</span>
                     </div>
-                    <div class="flex flex-col gap-2.5 text-[13px]">
-                        <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-accent mb-1.5">Legal</div>
-                        <a href="{{ route('imprint') }}" class="text-parchment/60 hover:text-parchment transition-colors">Imprint</a>
-                        <a href="{{ route('privacy') }}" class="text-parchment/60 hover:text-parchment transition-colors">Privacy Policy</a>
+                    <p class="italic text-[17px] leading-snug text-parchment/55 max-w-[300px] m-0">Kept by one small server, and open at every hour.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                    <div class="flex flex-col gap-3 text-base">
+                        <div class="font-mono text-[10.5px] tracking-[0.22em] uppercase text-gold mb-1">Elsewhere</div>
+                        <a href="https://modelcontextprotocol.io" class="text-parchment/65 hover:text-parchment transition-colors">The MCP specification</a>
+                        <a href="https://magic.wizards.com/en/rules" class="text-parchment/65 hover:text-parchment transition-colors">The Comprehensive Rules</a>
+                        <a href="https://scryfall.com/docs/api" class="text-parchment/65 hover:text-parchment transition-colors">Scryfall, who keeps the cards</a>
+                    </div>
+                    <div class="flex flex-col gap-3 text-base">
+                        <div class="font-mono text-[10.5px] tracking-[0.22em] uppercase text-gold mb-1">The fine print</div>
+                        <a href="{{ route('imprint') }}" class="text-parchment/65 hover:text-parchment transition-colors">Imprint</a>
+                        <a href="{{ route('privacy') }}" class="text-parchment/65 hover:text-parchment transition-colors">Privacy Policy</a>
                     </div>
                 </div>
             </div>
-            <div class="max-w-[1080px] mx-auto pt-6 border-t border-parchment/15 flex flex-wrap justify-between gap-4 font-mono text-[11px] text-parchment/60">
-                <span>Unaffiliated with Wizards of the Coast. Card data via Scryfall.</span>
+            <div class="max-w-[1180px] mx-auto mt-11 pt-5.5 border-t border-gold/16 flex flex-wrap justify-between gap-4 font-mono text-[11.5px] text-parchment/50">
+                <span>No pact with Wizards of the Coast. Card lore carried in from Scryfall.</span>
                 <span>© MMXXVI · The Azorsvault</span>
             </div>
         </footer>
