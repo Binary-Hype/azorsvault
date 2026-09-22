@@ -6,6 +6,34 @@
     $cliCommand = "claude mcp add --transport http azorsvault {$mcpUrl}";
 @endphp
 
+@push('structured-data')
+    <x-json-ld :data="[
+        '@context' => 'https://schema.org',
+        '@type' => 'SoftwareApplication',
+        '@id' => url('/').'#app',
+        'name' => 'Azorsvault',
+        'applicationCategory' => 'DeveloperApplication',
+        'applicationSubCategory' => 'MCP server',
+        'operatingSystem' => 'Any',
+        'url' => url('/'),
+        'description' => 'A Model Context Protocol server for Magic: The Gathering. It gives Claude read-only tools over every Scryfall card, its rulings, format legality and the Comprehensive Rules, plus Commander deck validation.',
+        'inLanguage' => 'en',
+        'isAccessibleForFree' => true,
+        'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'EUR'],
+        'publisher' => ['@id' => url('/').'#organization'],
+        'featureList' => [
+            'Card lookup by name, newest printing',
+            'Batch card lookup for decklists, up to 100 names',
+            'Advanced card search across fifteen stackable filters',
+            'Full-text search of the Comprehensive Rules and glossary',
+            'Rule, chapter, section and glossary lookup with subrules',
+            'Per-format legality, Game Changer and Reserved List status',
+            'Complete banned and restricted lists per format',
+            'Commander decklist validation with bracket detection',
+        ],
+    ]"/>
+@endpush
+
 @section('content')
     {{-- The seal --}}
     <section id="top" class="relative z-10 flex flex-col items-center text-center px-5 py-12 sm:px-22 sm:py-24">
@@ -23,7 +51,8 @@
         <h1 class="codex-wordmark font-display text-[clamp(86px,11vw,156px)] leading-[0.92] m-0 mb-3.5 text-[#f3ecd9]">The Azorsvault</h1>
 
         <p class="max-w-[640px] text-[18px] sm:text-[23px] leading-[1.5] sm:leading-[1.55] text-parchment/74 text-pretty m-0 mb-10">
-            Every card ever printed. Every ruling ever argued over. Sealed behind one door, and Claude already knows the knock.
+            Every Magic: The Gathering card ever printed. Every ruling ever argued over. Sealed behind one door, and
+            Claude already knows the knock.
         </p>
 
         {{-- The plain-spoken part: words of power must be exact. --}}

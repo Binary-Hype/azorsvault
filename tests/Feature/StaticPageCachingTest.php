@@ -1,6 +1,6 @@
 <?php
 
-dataset('static pages', ['home', 'imprint', 'privacy']);
+dataset('static pages', ['home', 'imprint', 'privacy', 'sitemap', 'llms']);
 
 test('static pages are publicly cacheable', function (string $routeName) {
     $cacheControl = $this->get(route($routeName))

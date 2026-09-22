@@ -4,24 +4,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Azorsvault — MTG MCP for Claude')</title>
-    <meta name="description" content="@yield('description', 'An MCP server for Magic: The Gathering. Every card ever printed, every ruling ever argued over — sealed in one vault, and Claude already knows the knock.')">
+    <title>@yield('title', 'Azorsvault — Magic: The Gathering MCP Server for Claude')</title>
+    <meta name="description" content="@yield('description', 'An MCP server for Magic: The Gathering. Card search, format legality and the Comprehensive Rules — sealed in one vault, and Claude already knows the knock.')">
 
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="@yield('og_title', 'Azorsvault — MTG MCP for Claude')">
-    <meta property="og:description" content="@yield('og_description', 'An MCP server for Magic: The Gathering, wired into Claude.')">
+    {{-- Let search engines show full snippets and the large card image. --}}
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
     {{-- current() drops the query string, so tracking parameters collapse onto one canonical URL. --}}
     <link rel="canonical" href="{{ url()->current() }}">
 
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Azorsvault">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:title" content="@yield('og_title', 'Azorsvault — Magic: The Gathering MCP Server for Claude')">
+    <meta property="og:description" content="@yield('og_description', 'An MCP server for Magic: The Gathering, wired into Claude.')">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ url('/icon.png') }}">
+    <meta property="og:image" content="{{ url('/og-image.png') }}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The Azorsvault seal above the wordmark, with the MCP endpoint azorsvault.cards/mcp/mtg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('og_title', 'Azorsvault — Magic: The Gathering MCP Server for Claude')">
+    <meta name="twitter:description" content="@yield('og_description', 'An MCP server for Magic: The Gathering, wired into Claude.')">
+    <meta name="twitter:image" content="{{ url('/og-image.png') }}">
+
     <meta name="theme-color" content="#060b1a">
+
+    <link rel="alternate" type="application/xml" title="Sitemap" href="{{ route('sitemap') }}">
 
     <link rel="icon" type="image/svg+xml" href="/logo.svg">
     <link rel="icon" type="image/png" sizes="128x128" href="/icon.png">
     <link rel="icon" type="image/jpeg" sizes="736x736" href="/icon.jpeg">
     <link rel="apple-touch-icon" sizes="128x128" href="/icon.png">
     <link rel="shortcut icon" href="/favicon.ico">
+
+    {{-- Sitewide entity graph: who publishes this, and what the site is. --}}
+    <x-json-ld :data="[
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Organization',
+                '@id' => url('/').'#organization',
+                'name' => 'Azorsvault',
+                'url' => url('/'),
+                'logo' => url('/icon.png'),
+                'sameAs' => ['https://github.com/Binary-Hype'],
+            ],
+            [
+                '@type' => 'WebSite',
+                '@id' => url('/').'#website',
+                'name' => 'Azorsvault',
+                'url' => url('/'),
+                'description' => 'An MCP server for Magic: The Gathering: card search, format legality and the Comprehensive Rules, wired into Claude.',
+                'inLanguage' => 'en',
+                'publisher' => ['@id' => url('/').'#organization'],
+            ],
+        ],
+    ]"/>
+
+    @stack('structured-data')
 
     {{-- Ahead of the font CSS: the latin files render every page, and having
          them before first paint is what keeps the swap from reflowing. --}}

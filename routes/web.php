@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -22,4 +24,7 @@ Route::withoutMiddleware([
     Route::view('/', 'landing')->name('home');
     Route::view('/imprint', 'legal.imprint')->name('imprint');
     Route::view('/privacy-policy', 'legal.privacy-policy')->name('privacy');
+
+    Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+    Route::get('/llms.txt', LlmsTxtController::class)->name('llms');
 });
