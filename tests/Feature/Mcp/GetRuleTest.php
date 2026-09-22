@@ -117,3 +117,71 @@ test('it reports the total and a note when a chapter is truncated', function () 
         ->assertSee('"total": 105')
         ->assertSee('Results truncated');
 });
+
+/*
+ * A bare rule number used to return only its own sentence, leaving the
+ * lettered subrules that carry the actual detail behind.
+ */
+test('it returns a rule together with its lettered subrules', function () {
+    ComprehensiveRule::factory()->create([
+        'rule_number' => '702.19',
+        'chapter' => '702',
+        'section' => 7,
+        'content' => 'Trample',
+    ]);
+    ComprehensiveRule::factory()->create([
+        'rule_number' => '702.19a',
+        'chapter' => '702',
+        'section' => 7,
+        'content' => 'Trample is a static ability.',
+    ]);
+    ComprehensiveRule::factory()->create([
+        'rule_number' => '702.19b',
+        'chapter' => '702',
+        'section' => 7,
+        'content' => 'The controller of an attacking creature with trample first assigns damage.',
+    ]);
+
+    $response = MtgServer::tool(GetRule::class, ['rule_number' => '702.19']);
+
+    $response->assertOk()
+        ->assertSee('"subrules"')
+        ->assertSee('702.19a')
+        ->assertSee('Trample is a static ability.')
+        ->assertSee('702.19b');
+});
+
+test('it does not mistake a sibling rule for a subrule', function () {
+    ComprehensiveRule::factory()->create([
+        'rule_number' => '702.19',
+        'chapter' => '702',
+        'section' => 7,
+        'content' => 'Trample',
+    ]);
+    ComprehensiveRule::factory()->create([
+        'rule_number' => '702.190',
+        'chapter' => '702',
+        'section' => 7,
+        'content' => 'Squad',
+    ]);
+
+    $response = MtgServer::tool(GetRule::class, ['rule_number' => '702.19']);
+
+    $response->assertOk()
+        ->assertDontSee('702.190')
+        ->assertDontSee('Squad');
+});
+
+test('it omits the subrules key for a rule that has none', function () {
+    ComprehensiveRule::factory()->create([
+        'rule_number' => '702.19a',
+        'chapter' => '702',
+        'section' => 7,
+        'content' => 'Trample is a static ability.',
+    ]);
+
+    $response = MtgServer::tool(GetRule::class, ['rule_number' => '702.19a']);
+
+    $response->assertOk()
+        ->assertDontSee('subrules');
+});

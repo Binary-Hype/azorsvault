@@ -35,14 +35,18 @@ test('it omits the rules version when nothing has been imported', function () {
 test('it builds the full status line once rules are present', function () {
     ComprehensiveRule::factory()->create(['effective_date' => '2026-02-27']);
 
+    $tools = count(glob(app_path('Mcp/Tools/*.php')) ?: []);
+
     expect(app(VaultStatus::class)->segments())
-        ->toBe(['Live', '5 tools', 'Comprehensive Rules v2026.02.27']);
+        ->toBe(['Live', $tools.' tools', 'Comprehensive Rules v2026.02.27']);
 });
 
 test('the landing page renders the derived status line', function () {
     ComprehensiveRule::factory()->create(['effective_date' => '2026-02-27']);
 
+    $tools = count(glob(app_path('Mcp/Tools/*.php')) ?: []);
+
     $this->get('/')
         ->assertOk()
-        ->assertSee('Live · 5 tools · Comprehensive Rules v2026.02.27');
+        ->assertSee('Live · '.$tools.' tools · Comprehensive Rules v2026.02.27');
 });

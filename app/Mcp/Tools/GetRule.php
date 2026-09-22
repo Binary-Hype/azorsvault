@@ -13,7 +13,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('Get a specific rule, chapter, or section from the official Magic: The Gathering Comprehensive Rules. Use a full rule number like "704.5m" for a single rule, a chapter number like "704" for all state-based action rules, or a section number like "7" for all Additional Rules. Use "glossary:trample" to look up a specific glossary term.')]
+#[Description('Get a specific rule, chapter, or section from the official Magic: The Gathering Comprehensive Rules. Use a full rule number like "704.5m" for a single rule, or "702.19" to get that rule together with its lettered subrules. Use a chapter number like "704" for all state-based action rules, or a section number like "7" for all Additional Rules. Use "glossary:trample" to look up a specific glossary term.')]
 #[IsReadOnly]
 #[IsIdempotent]
 class GetRule extends Tool
@@ -59,10 +59,46 @@ class GetRule extends Tool
             return Response::error("Rule not found: \"{$input}\". Try using search-rules to search by keyword.");
         }
 
-        return Response::text(json_encode([
+        $result = [
             'rule_number' => $rule->rule_number,
             'content' => $rule->content,
-        ], JSON_PRETTY_PRINT));
+        ];
+
+        $subrules = $this->fetchSubrules($rule->rule_number);
+
+        if ($subrules !== []) {
+            $result['subrules'] = $subrules;
+        }
+
+        return Response::text(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Fetch the lettered subrules of a rule, so that "702.19" also returns
+     * "702.19a" through "702.19z".
+     *
+     * A LIKE prefix alone would also match sibling rules such as "702.190",
+     * so matches are narrowed to numbers that continue with letters only.
+     *
+     * @return array<int, array{rule_number: string, content: string}>
+     */
+    private function fetchSubrules(string $ruleNumber): array
+    {
+        $pattern = '^'.str_replace('.', '\\.', $ruleNumber).'[a-z]+$';
+
+        return ComprehensiveRule::query()
+            ->rules()
+            ->where('rule_number', 'LIKE', $ruleNumber.'%')
+            ->whereRaw('rule_number REGEXP ?', [$pattern])
+            ->orderBy('rule_number')
+            ->limit(self::MAX_RESULTS)
+            ->get()
+            ->map(fn (ComprehensiveRule $subrule) => [
+                'rule_number' => $subrule->rule_number,
+                'content' => $subrule->content,
+            ])
+            ->values()
+            ->all();
     }
 
     private function fetchBySection(int $section): Response
@@ -122,7 +158,7 @@ class GetRule extends Tool
     {
         return [
             'rule_number' => $schema->string()
-                ->description('A rule number ("704.5m"), chapter ("704"), section ("7"), or glossary term ("glossary:trample").')
+                ->description('A rule number ("704.5m" or "702.19", which also returns its subrules), chapter ("704"), section ("7"), or glossary term ("glossary:trample").')
                 ->required(),
         ];
     }
