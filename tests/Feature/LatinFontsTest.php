@@ -83,3 +83,31 @@ test('it degrades to no stylesheet when the fonts have not been fetched', functi
 
     expect(app(LatinFonts::class)->toStyleTag()->toHtml())->toBe('');
 });
+
+/*
+ * The preloads spent weeks 404ing because the cache sat on the public disk,
+ * behind a storage symlink left pointing at a pruned release. PHP still read
+ * the stylesheet off the disk directly, so the markup looked healthy while
+ * every font request fell through to a PHP-rendered error page. These pin the
+ * fonts to the document root, where nginx serves the same files it writes.
+ */
+test('it serves fonts from the document root, not behind the storage symlink', function () {
+    $files = app(LatinFonts::class)->files();
+
+    expect($files)->not->toBeEmpty()
+        ->and($files)->each->toStartWith('/fonts/')
+        ->and(implode(' ', $files))->not->toContain('/storage/');
+});
+
+test('every preloaded font resolves to a real file in the document root', function () {
+    foreach (app(LatinFonts::class)->files() as $url) {
+        expect(public_path(ltrim($url, '/')))->toBeFile("no font file behind {$url}");
+    }
+});
+
+test('the inlined font css never points at the storage path', function () {
+    $css = app(LatinFonts::class)->toStyleTag()->toHtml();
+
+    expect($css)->not->toContain('/storage/')
+        ->and(substr_count($css, 'url(/fonts/'))->toBe(14);
+});

@@ -12,16 +12,17 @@ return [
     ],
 
     /*
-     * This disk will be used to store local Google Fonts. The public disk
-     * is the default because it can be served over HTTP with storage:link.
+     * The `fonts` disk is rooted at public/fonts, so the files nginx serves are
+     * the files this writes — no storage symlink in the request path. The URLs
+     * baked into the cached stylesheet come from this disk's `url`.
      */
-    'disk' => 'public',
+    'disk' => 'fonts',
 
     /*
-     * Prepend all files that are written to the selected disk with this path.
-     * This allows separating the fonts from other data in the public disk.
+     * Empty: the `fonts` disk is already rooted at public/fonts, so a prefix
+     * here would nest the cache at public/fonts/fonts.
      */
-    'path' => 'fonts',
+    'path' => '',
 
     /*
      * Irrelevant while the @googlefonts directive is unused: App\Services\

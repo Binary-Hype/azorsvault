@@ -110,11 +110,16 @@ class LatinFonts
             return null;
         }
 
-        $path = sprintf(
-            '%s/%s/fonts.css',
-            trim((string) config('google-fonts.path', 'fonts'), '/'),
+        /*
+         * Mirrors Spatie\GoogleFonts\GoogleFonts::path(): empty segments are
+         * dropped, so the configured path may be blank when the disk is
+         * already rooted at the cache directory.
+         */
+        $path = collect([
+            trim((string) config('google-fonts.path', ''), '/'),
             substr(md5($url), 0, 10),
-        );
+            'fonts.css',
+        ])->filter()->join('/');
 
         $disk = $this->disk();
 
@@ -135,6 +140,6 @@ class LatinFonts
 
     private function disk(): Filesystem
     {
-        return Storage::disk(config('google-fonts.disk', 'public'));
+        return Storage::disk(config('google-fonts.disk', 'fonts'));
     }
 }
