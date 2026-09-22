@@ -20,6 +20,9 @@ class ImportComprehensiveRules extends Command
 
     private const RULES_PAGE_URL = 'https://magic.wizards.com/en/rules';
 
+    /** Used when the rules file carries no parsable effective date. */
+    private const DEFAULT_EFFECTIVE_DATE = '2026-01-01';
+
     public function handle(): int
     {
         if (! $this->option('force') && Cache::get(self::CACHE_KEY) === now()->toDateString()) {
@@ -47,6 +50,19 @@ class ImportComprehensiveRules extends Command
         $this->info('Parsing and importing rules...');
         $importStartedAt = now();
         $count = $this->importRules($fullPath);
+
+        /*
+         * Pruning is keyed off the import timestamp, so an import that produced
+         * no rows would delete the entire table. Treat that as a failed run and
+         * leave the existing data untouched.
+         */
+        if ($count === 0) {
+            $this->error('No rules were imported; keeping existing data.');
+
+            Storage::disk('local')->delete($storagePath);
+
+            return self::FAILURE;
+        }
 
         $deleted = ComprehensiveRule::where('updated_at', '<', $importStartedAt)->delete();
 
@@ -171,10 +187,18 @@ class ImportComprehensiveRules extends Command
     private function extractEffectiveDate(string $content): string
     {
         if (preg_match('/These rules are effective as of (.+)\./', $content, $matches)) {
-            return date('Y-m-d', strtotime(trim($matches[1]))) ?: '2026-01-01';
+            /*
+             * strtotime() returns false for an unparsable header, which date()
+             * would silently render as 1970-01-01, so check it explicitly.
+             */
+            $timestamp = strtotime(trim($matches[1]));
+
+            if ($timestamp !== false) {
+                return date('Y-m-d', $timestamp);
+            }
         }
 
-        return '2026-01-01';
+        return self::DEFAULT_EFFECTIVE_DATE;
     }
 
     /**

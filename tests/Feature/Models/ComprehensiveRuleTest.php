@@ -1,10 +1,14 @@
 <?php
 
 use App\Models\ComprehensiveRule;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Carbon;
 
-uses(RefreshDatabase::class);
+/*
+ * InnoDB FULLTEXT indexes do not see rows written inside an uncommitted
+ * transaction, so these tests commit their fixtures instead of wrapping them.
+ */
+uses(DatabaseTruncation::class);
 
 test('byRuleNumber scope finds rule by exact number', function () {
     ComprehensiveRule::factory()->create(['rule_number' => '704.5a']);
@@ -33,7 +37,7 @@ test('bySection scope filters by section', function () {
     expect(ComprehensiveRule::bySection(1)->count())->toBe(1);
 });
 
-test('byContentSearch scope uses LIKE matching on content', function () {
+test('byContentSearch scope matches rule content by word', function () {
     ComprehensiveRule::factory()->create(['content' => 'A player loses the game if their life total is 0 or less.']);
     ComprehensiveRule::factory()->create(['content' => 'These rules apply to any Magic game.']);
 

@@ -55,6 +55,19 @@ class ImportScryfallRulings extends Command
         $importStartedAt = now();
         $count = $this->importRulings($bulkData, $fullPath);
 
+        /*
+         * Pruning is keyed off the import timestamp, so an import that produced
+         * no rows would delete the entire table. Treat that as a failed run and
+         * leave the existing data untouched.
+         */
+        if ($count === 0) {
+            $this->error('No rulings were imported; keeping existing data.');
+
+            Storage::disk('local')->delete($storagePath);
+
+            return self::FAILURE;
+        }
+
         $deleted = Ruling::where('updated_at', '<', $importStartedAt)->delete();
 
         Storage::disk('local')->delete($storagePath);
@@ -87,22 +100,35 @@ class ImportScryfallRulings extends Command
             $progressBar->start();
         }
 
-        foreach ($this->readJsonLines($stream) as $ruling) {
-            $batch[] = $this->extractRulingData($ruling);
-            $count++;
+        /*
+         * gzopen() also accepts uncompressed input, so a truncated or non-gzip
+         * download reaches the JSON decoder. Report that as an empty import
+         * rather than letting the exception escape the command.
+         */
+        try {
+            foreach ($this->readJsonLines($stream) as $ruling) {
+                $batch[] = $this->extractRulingData($ruling);
+                $count++;
 
-            if (count($batch) >= self::BATCH_SIZE) {
-                $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
-                $batch = [];
+                if (count($batch) >= self::BATCH_SIZE) {
+                    $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
+                    $batch = [];
 
-                if ($progressBar !== null) {
-                    $progressBar->setProgress($count);
+                    if ($progressBar !== null) {
+                        $progressBar->setProgress($count);
+                    }
                 }
             }
-        }
 
-        if (count($batch) > 0) {
-            $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
+            if (count($batch) > 0) {
+                $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
+            }
+        } catch (\JsonException $e) {
+            $this->error("Malformed bulk data file: {$e->getMessage()}");
+
+            gzclose($stream);
+
+            return 0;
         }
 
         if ($progressBar !== null) {

@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\ComprehensiveRule;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -29,7 +30,7 @@ class GetRule extends Tool
 
         // Glossary lookup: "glossary:trample"
         if (str_starts_with(mb_strtolower($input), 'glossary:')) {
-            $rule = ComprehensiveRule::byRuleNumber(mb_strtolower($input))->first();
+            $rule = ComprehensiveRule::glossary()->byRuleNumber(mb_strtolower($input))->first();
 
             if (! $rule) {
                 return Response::error("Glossary entry not found: \"{$input}\". Try using search-rules to search for the term.");
@@ -66,17 +67,38 @@ class GetRule extends Tool
 
     private function fetchBySection(int $section): Response
     {
-        $rules = ComprehensiveRule::bySection($section)
-            ->rules()
+        return $this->respondWithRules(
+            ComprehensiveRule::bySection($section)->rules(),
+            "No rules found for section {$section}.",
+        );
+    }
+
+    private function fetchByChapter(string $chapter): Response
+    {
+        return $this->respondWithRules(
+            ComprehensiveRule::byChapter($chapter)->rules(),
+            "No rules found for chapter {$chapter}.",
+        );
+    }
+
+    /**
+     * Return a capped, ordered list of rules, flagging when results were cut off.
+     *
+     * @param  Builder<ComprehensiveRule>  $query
+     */
+    private function respondWithRules(Builder $query, string $emptyMessage): Response
+    {
+        $total = (clone $query)->count();
+
+        $rules = $query
             ->orderBy('rule_number')
             ->limit(self::MAX_RESULTS)
             ->get();
 
         if ($rules->isEmpty()) {
-            return Response::error("No rules found for section {$section}.");
+            return Response::error($emptyMessage);
         }
 
-        $total = ComprehensiveRule::bySection($section)->rules()->count();
         $result = [
             'count' => $rules->count(),
             'total' => $total,
@@ -91,27 +113,6 @@ class GetRule extends Tool
         }
 
         return Response::text(json_encode($result, JSON_PRETTY_PRINT));
-    }
-
-    private function fetchByChapter(string $chapter): Response
-    {
-        $rules = ComprehensiveRule::byChapter($chapter)
-            ->rules()
-            ->orderBy('rule_number')
-            ->limit(self::MAX_RESULTS)
-            ->get();
-
-        if ($rules->isEmpty()) {
-            return Response::error("No rules found for chapter {$chapter}.");
-        }
-
-        return Response::text(json_encode([
-            'count' => $rules->count(),
-            'rules' => $rules->map(fn (ComprehensiveRule $rule) => [
-                'rule_number' => $rule->rule_number,
-                'content' => $rule->content,
-            ])->all(),
-        ], JSON_PRETTY_PRINT));
     }
 
     /**

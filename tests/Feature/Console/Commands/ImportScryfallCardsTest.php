@@ -489,3 +489,31 @@ test('it persists the game changer flag on import', function () {
 
     expect(Card::where('name', 'Rhystic Study')->first()->game_changer)->toBeTrue();
 });
+
+/*
+ * Pruning is keyed off the import timestamp, so a run that imports nothing
+ * used to delete every existing card.
+ */
+test('it keeps existing cards when the import yields no rows', function () {
+    Card::factory()->create(['name' => 'Lightning Bolt']);
+
+    // Not valid gzip, so the import opens no stream and imports nothing.
+    fakeScryfallBulkDataResponse(gzContent: 'not-gzip-at-all');
+
+    $this->artisan('scryfall:import-cards', ['--force' => true, '--no-progress' => true])
+        ->expectsOutputToContain('keeping existing data')
+        ->assertFailed();
+
+    expect(Card::count())->toBe(1);
+});
+
+test('it does not cache a failed import as todays run', function () {
+    Card::factory()->create(['name' => 'Lightning Bolt']);
+
+    fakeScryfallBulkDataResponse(gzContent: 'not-gzip-at-all');
+
+    $this->artisan('scryfall:import-cards', ['--force' => true, '--no-progress' => true])
+        ->assertFailed();
+
+    expect(Cache::get('scryfall:last_import'))->toBeNull();
+});

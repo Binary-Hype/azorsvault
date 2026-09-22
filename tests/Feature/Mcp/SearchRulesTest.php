@@ -3,9 +3,13 @@
 use App\Mcp\Servers\MtgServer;
 use App\Mcp\Tools\SearchRules;
 use App\Models\ComprehensiveRule;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 
-uses(RefreshDatabase::class);
+/*
+ * InnoDB FULLTEXT indexes do not see rows written inside an uncommitted
+ * transaction, so these tests commit their fixtures instead of wrapping them.
+ */
+uses(DatabaseTruncation::class);
 
 test('it finds rules by keyword search', function () {
     ComprehensiveRule::factory()->create([

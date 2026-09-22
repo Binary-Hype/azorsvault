@@ -25,7 +25,7 @@ class RulingFactory extends Factory
             'source' => fake()->randomElement(['wotc', 'scryfall']),
             'published_at' => $publishedAt,
             'comment' => $comment,
-            'content_hash' => hash('sha256', $oracleId . '|' . $publishedAt . '|' . $comment),
+            'content_hash' => hash('sha256', $oracleId.'|'.$publishedAt.'|'.$comment),
         ];
     }
 

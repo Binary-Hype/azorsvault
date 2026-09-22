@@ -1,3 +1,4 @@
+@inject('vaultStatus', 'App\\Services\\VaultStatus')
 @extends('layouts.codex')
 
 @php
@@ -92,7 +93,7 @@
 
         <div class="flex items-center gap-2.5 font-mono text-[11.5px] tracking-wider text-parchment/60">
             <span class="codex-live-dot w-[7px] h-[7px] rounded-full bg-live"></span>
-            <span>Live · 5 tools · Comprehensive Rules v2026.04.10</span>
+            <span>{{ implode(' · ', $vaultStatus->segments()) }}</span>
         </div>
     </section>
 
@@ -116,7 +117,10 @@
                     <div class="font-mono text-[9.5px] tracking-[0.18em] uppercase text-accent/85 mb-2">{{ $q['tag'] }}</div>
                     <div class="codex-quote font-serif italic text-[19px] leading-[1.4] text-parchment">
                         @if (! empty($q['typewriter']))
-                            <span class="codex-typed" data-typewriter data-start-delay="900">{{ $q['text'] }}</span>
+                            {{-- Characters are visibility:hidden until typed, which removes them
+                                 from the accessibility tree, so expose a static copy instead. --}}
+                            <span class="codex-typed" data-typewriter data-start-delay="900" aria-hidden="true">{{ $q['text'] }}</span>
+                            <span class="sr-only">{{ $q['text'] }}</span>
                         @else
                             {{ $q['text'] }}
                         @endif

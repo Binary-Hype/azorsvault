@@ -1,4 +1,4 @@
-@inject('latinFontPreload', 'App\\Services\\LatinFontPreload')
+@inject('latinFonts', 'App\\Services\\LatinFonts')
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +10,9 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="@yield('og_title', 'Azorsvault — MTG MCP for Claude')">
     <meta property="og:description" content="@yield('og_description', 'An MCP server for Magic: The Gathering, wired into Claude.')">
+    {{-- current() drops the query string, so tracking parameters collapse onto one canonical URL. --}}
+    <link rel="canonical" href="{{ url()->current() }}">
+
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:image" content="{{ url('/icon.png') }}">
     <meta name="theme-color" content="#060b1a">
@@ -22,13 +25,14 @@
 
     {{-- Ahead of the font CSS: the four latin files render every page, and
          having them before first paint is what keeps the swap from reflowing. --}}
-    {{ $latinFontPreload->toHtml() }}
+    {{ $latinFonts->toHtml() }}
 
-    @googlefonts
+    {{-- Only the basic-latin @font-face rules; the package would inline all 82. --}}
+    {{ $latinFonts->toStyleTag() }}
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <link rel="preconnect" href="https://analytics.notonfire.systems" crossorigin>
+    <link rel="preconnect" href="https://analytics.notonfire.systems">
 
     <script defer src="https://analytics.notonfire.systems/script.js" data-website-id="01a0726d-09b5-711e-8e63-0579e92d9c4f" data-domains="azorsvault.cards" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true" data-performance="true" referrerpolicy="no-referrer"></script>
 </head>

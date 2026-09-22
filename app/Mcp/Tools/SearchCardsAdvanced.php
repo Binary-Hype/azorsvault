@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('Search Magic: The Gathering cards using multiple filters. All provided filters are combined with AND logic. Text searches on name and oracle_text use partial matching. Returns up to 50 results, grouped by oracle_id to show unique cards rather than every printing.')]
+#[Description('Search Magic: The Gathering cards using multiple filters. All provided filters are combined with AND logic. Text searches on name and oracle_text match whole words with prefix support, not arbitrary substrings. Returns up to 50 results, grouped by oracle_id to show unique cards rather than every printing.')]
 #[IsReadOnly]
 #[IsIdempotent]
 class SearchCardsAdvanced extends Tool
@@ -43,7 +43,9 @@ class SearchCardsAdvanced extends Tool
             'limit' => 'nullable|integer|min:1|max:50',
         ]);
 
-        $hasFilter = collect($validated)->except('limit', 'cmc_operator', 'legality')->filter()->isNotEmpty();
+        $hasFilter = collect($validated)
+            ->except('limit', 'cmc_operator', 'legality')
+            ->contains(fn ($value) => $value !== null && $value !== '' && $value !== []);
 
         if (! $hasFilter) {
             return Response::error('At least one search filter must be provided.');
@@ -67,9 +69,15 @@ class SearchCardsAdvanced extends Tool
             'max_edhrec_rank' => 'byMaxEdhrecRank',
         ];
 
+        /*
+         * A plain empty() check would discard legitimate values such as
+         * power "0", so only null/empty-string/empty-array are skipped.
+         */
         foreach ($scopes as $field => $scope) {
-            if (! empty($validated[$field])) {
-                $query->{$scope}($validated[$field]);
+            $value = $validated[$field] ?? null;
+
+            if ($value !== null && $value !== '' && $value !== []) {
+                $query->{$scope}($value);
             }
         }
 
@@ -109,11 +117,11 @@ class SearchCardsAdvanced extends Tool
     {
         return [
             'name' => $schema->string()
-                ->description('Search card names using fulltext matching. Partial matches supported.'),
+                ->description('Search card names by word. Each word must appear and may match as a prefix, so "light" finds "Lightning Bolt". Case-insensitive.'),
             'mana_cost' => $schema->string()
                 ->description('Exact mana cost to match, e.g. "{2}{R}{R}" or "{G}".'),
             'oracle_text' => $schema->string()
-                ->description('Search rules text using fulltext matching. E.g. "draw a card" or "destroy target creature".'),
+                ->description('Search rules text by word. Every word must appear and may match as a prefix. E.g. "draw card" or "destroy target creature". Case-insensitive.'),
             'type_line' => $schema->string()
                 ->description('Partial match on the type line. E.g. "Creature", "Legendary", "Artifact".'),
             'subtype' => $schema->string()

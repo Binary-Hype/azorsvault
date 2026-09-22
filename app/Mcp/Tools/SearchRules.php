@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('Search the official Magic: The Gathering Comprehensive Rules by keyword or phrase. Searches rule text and glossary definitions. Use this to answer questions about game mechanics, timing, interactions, layers, state-based actions, combat, and other rules concepts.')]
+#[Description('Search the official Magic: The Gathering Comprehensive Rules by keyword. Searches rule text and glossary definitions. Use this to answer questions about game mechanics, timing, interactions, layers, state-based actions, combat, and other rules concepts.')]
 #[IsReadOnly]
 #[IsIdempotent]
 class SearchRules extends Tool
@@ -69,7 +69,7 @@ class SearchRules extends Tool
     {
         return [
             'query' => $schema->string()
-                ->description('Text to search for in rule content. Searches both rules and glossary entries.')
+                ->description('Text to search for in rule content. Matches whole words with prefix support; every word must appear. Searches both rules and glossary entries.')
                 ->required(),
             'section' => $schema->integer()
                 ->description('Filter to a specific section (1-9). 1=Game Concepts, 2=Parts of a Card, 3=Card Types, 4=Zones, 5=Turn Structure, 6=Spells/Abilities/Effects, 7=Additional Rules, 8=Multiplayer, 9=Casual Variants.'),

@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\Card;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -27,7 +28,7 @@ class SearchCards extends Tool
         $loweredNames = array_map('mb_strtolower', $names);
 
         $cards = Card::with('rulings')
-            ->whereRaw('LOWER(name) IN (' . implode(',', array_fill(0, count($loweredNames), '?')) . ')', $loweredNames)
+            ->whereRaw('LOWER(name) IN ('.implode(',', array_fill(0, count($loweredNames), '?')).')', $loweredNames)
             ->orderByDesc('released_at')
             ->get()
             ->groupBy(fn (Card $card) => mb_strtolower($card->name));
@@ -43,7 +44,7 @@ class SearchCards extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\JsonSchema\Types\Type>
+     * @return array<string, Type>
      */
     public function schema(JsonSchema $schema): array
     {

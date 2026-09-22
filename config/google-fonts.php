@@ -3,8 +3,9 @@
 return [
 
     /*
-     * Here you can register fonts to call from the @googlefonts Blade directive.
-     * The google-fonts:fetch command will prefetch these fonts.
+     * Fonts registered here are prefetched by the google-fonts:fetch command.
+     * The @googlefonts directive is not used; App\Services\LatinFonts reads
+     * the cached stylesheet and emits the parts these pages render.
      */
     'fonts' => [
         'default' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
@@ -23,15 +24,16 @@ return [
     'path' => 'fonts',
 
     /*
-     * By default, CSS will be inlined to reduce the amount of round trips
-     * browsers need to make in order to load the requested font files.
+     * Irrelevant while the @googlefonts directive is unused: App\Services\
+     * LatinFonts inlines the basic-latin faces itself, which is 14 of the
+     * stylesheet's 82 rules. Kept at the package default.
      */
     'inline' => true,
 
     /*
      * This stays false because the package preloads every subset it fetched —
      * 23 files, most of which these pages never render. App\Services\
-     * LatinFontPreload emits the four latin files instead, which is what the
+     * LatinFonts emits the four latin files instead, which is what the
      * layout links and what keeps the font swap from shifting the layout.
      */
     'preload' => false,
@@ -39,7 +41,9 @@ return [
     /*
      * Fonts must never be requested from Google at render time, so the
      * fallback to Google's CDN stays disabled. Run google-fonts:fetch on
-     * deploy; without the local files this will throw instead.
+     * deploy; without the local files the pages render in fallback faces and
+     * LatinFonts logs an error (it no longer throws, so a missed fetch cannot
+     * take every page down).
      */
     'fallback' => false,
 

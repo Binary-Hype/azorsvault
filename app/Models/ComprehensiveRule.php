@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SearchesFullText;
 use Database\Factories\ComprehensiveRuleFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,8 @@ class ComprehensiveRule extends Model
 {
     /** @use HasFactory<ComprehensiveRuleFactory> */
     use HasFactory;
+
+    use SearchesFullText;
 
     protected $guarded = [];
 
@@ -54,7 +57,7 @@ class ComprehensiveRule extends Model
      */
     public function scopeByContentSearch(Builder $query, string $search): void
     {
-        $query->where('content', 'LIKE', '%'.$search.'%');
+        $this->scopeFullTextSearch($query, 'content', $search);
     }
 
     /**

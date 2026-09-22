@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-
 return [
 
     /*
@@ -64,7 +62,9 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            // This application has no user accounts; the guard exists only so that
+            // framework code resolving a guard (e.g. the throttle middleware) works.
+            'model' => env('AUTH_MODEL'),
         ],
 
         // 'users' => [

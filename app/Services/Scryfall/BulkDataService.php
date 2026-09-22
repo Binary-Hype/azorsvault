@@ -93,7 +93,18 @@ class BulkDataService
             $output->newLine();
         }
 
-        return $response->successful() || file_exists($destination);
+        if (! $response->successful()) {
+            /*
+             * Guzzle writes the response body to the sink even on a 4xx/5xx, so
+             * the destination exists but holds an error page. Remove it so a
+             * later run cannot mistake it for a usable download.
+             */
+            @unlink($destination);
+
+            return false;
+        }
+
+        return file_exists($destination);
     }
 
     /**

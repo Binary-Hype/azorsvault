@@ -3,9 +3,13 @@
 use App\Mcp\Servers\MtgServer;
 use App\Mcp\Tools\SearchCardsAdvanced;
 use App\Models\Card;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 
-uses(RefreshDatabase::class);
+/*
+ * InnoDB FULLTEXT indexes do not see rows written inside an uncommitted
+ * transaction, so these tests commit their fixtures instead of wrapping them.
+ */
+uses(DatabaseTruncation::class);
 
 test('it searches by name', function () {
     Card::factory()->create(['name' => 'Lightning Bolt']);
@@ -190,5 +194,43 @@ test('it excludes game changers when the filter is false', function () {
 
     $response->assertOk()
         ->assertSee('Divination')
+        ->assertSee('"count": 1');
+});
+
+/*
+ * Falsy-but-valid filters (cmc 0, power "0", game_changer false) used to be
+ * discarded by empty()/filter() checks, so they either errored out as "no
+ * filter provided" or were silently dropped from the query.
+ */
+test('it accepts a zero cmc as the only filter', function () {
+    Card::factory()->create(['name' => 'Ornithopter', 'cmc' => 0]);
+    Card::factory()->create(['name' => 'Divination', 'cmc' => 3]);
+
+    $response = MtgServer::tool(SearchCardsAdvanced::class, ['cmc' => 0]);
+
+    $response->assertOk()
+        ->assertSee('Ornithopter')
+        ->assertSee('"count": 1');
+});
+
+test('it accepts game changer false as the only filter', function () {
+    Card::factory()->create(['name' => 'Rhystic Study', 'game_changer' => true]);
+    Card::factory()->create(['name' => 'Divination', 'game_changer' => false]);
+
+    $response = MtgServer::tool(SearchCardsAdvanced::class, ['game_changer' => false]);
+
+    $response->assertOk()
+        ->assertSee('Divination')
+        ->assertSee('"count": 1');
+});
+
+test('it applies a power filter of zero', function () {
+    Card::factory()->create(['name' => 'Ornithopter', 'power' => '0']);
+    Card::factory()->create(['name' => 'Grizzly Bears', 'power' => '2']);
+
+    $response = MtgServer::tool(SearchCardsAdvanced::class, ['power' => '0']);
+
+    $response->assertOk()
+        ->assertSee('Ornithopter')
         ->assertSee('"count": 1');
 });

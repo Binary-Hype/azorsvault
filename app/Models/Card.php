@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SearchesFullText;
 use Database\Factories\CardFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,8 @@ class Card extends Model
 {
     /** @use HasFactory<CardFactory> */
     use HasFactory;
+
+    use SearchesFullText;
 
     public $incrementing = false;
 
@@ -65,7 +68,7 @@ class Card extends Model
      */
     public function scopeByNameSearch(Builder $query, string $search): void
     {
-        $query->where('name', 'LIKE', '%'.$search.'%');
+        $this->scopeFullTextSearch($query, 'name', $search);
     }
 
     /**
@@ -81,7 +84,7 @@ class Card extends Model
      */
     public function scopeByOracleText(Builder $query, string $search): void
     {
-        $query->where('oracle_text', 'LIKE', '%'.$search.'%');
+        $this->scopeFullTextSearch($query, 'oracle_text', $search);
     }
 
     /**

@@ -59,7 +59,6 @@ document.querySelectorAll('[data-typewriter]').forEach((el) => {
     const tail = document.createElement('span');
 
     el.replaceChildren(...letters, tail);
-    el.setAttribute('aria-label', text);
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         letters.forEach((letter) => letter.classList.add('is-typed'));

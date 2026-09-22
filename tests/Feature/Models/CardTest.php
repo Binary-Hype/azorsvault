@@ -1,9 +1,13 @@
 <?php
 
 use App\Models\Card;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 
-uses(RefreshDatabase::class);
+/*
+ * InnoDB FULLTEXT indexes do not see rows written inside an uncommitted
+ * transaction, so these tests commit their fixtures instead of wrapping them.
+ */
+uses(DatabaseTruncation::class);
 
 test('byExactName scope finds card case-insensitively', function () {
     Card::factory()->create(['name' => 'Lightning Bolt']);
@@ -134,4 +138,32 @@ test('toSearchResult returns curated card data', function () {
     expect($result)
         ->toHaveKeys(['id', 'oracle_id', 'name', 'mana_cost', 'cmc', 'type_line', 'oracle_text', 'colors', 'rarity', 'legalities', 'prices'])
         ->and($result['name'])->toBe('Test Card');
+});
+
+test('byNameSearch ignores stopwords so they cannot void the match', function () {
+    Card::factory()->create(['name' => 'Wrath of God']);
+    Card::factory()->create(['name' => 'Wrath Unbound']);
+
+    // "of" is an InnoDB stopword; requiring it would match nothing.
+    expect(Card::byNameSearch('Wrath of God')->count())->toBe(1);
+});
+
+test('byNameSearch falls back to LIKE when every term is unindexable', function () {
+    Card::factory()->create(['name' => 'Wrath of God']);
+
+    expect(Card::byNameSearch('of')->count())->toBe(1);
+});
+
+test('byNameSearch strips boolean operators from user input', function () {
+    Card::factory()->create(['name' => 'Lightning Bolt']);
+
+    expect(Card::byNameSearch('+Lightning')->count())->toBe(1);
+    expect(Card::byNameSearch('Lightning"')->count())->toBe(1);
+});
+
+test('byNameSearch requires every indexable term', function () {
+    Card::factory()->create(['name' => 'Lightning Bolt']);
+    Card::factory()->create(['name' => 'Lightning Strike']);
+
+    expect(Card::byNameSearch('Lightning Bolt')->count())->toBe(1);
 });

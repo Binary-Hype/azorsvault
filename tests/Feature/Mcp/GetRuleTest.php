@@ -94,3 +94,26 @@ test('it returns error for nonexistent glossary term', function () {
 
     $response->assertHasErrors();
 });
+
+/*
+ * A chapter with more rules than the cap used to be truncated silently: only
+ * the section branch reported `total` and a truncation note.
+ */
+test('it reports the total and a note when a chapter is truncated', function () {
+    ComprehensiveRule::factory()
+        ->count(105)
+        ->sequence(fn ($sequence) => [
+            'rule_number' => '704.'.($sequence->index + 1),
+            'chapter' => '704',
+            'section' => 7,
+            'is_glossary' => false,
+        ])
+        ->create();
+
+    $response = MtgServer::tool(GetRule::class, ['rule_number' => '704']);
+
+    $response->assertOk()
+        ->assertSee('"count": 100')
+        ->assertSee('"total": 105')
+        ->assertSee('Results truncated');
+});

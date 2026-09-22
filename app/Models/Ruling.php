@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\RulingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Ruling extends Model
 {
-    /** @use HasFactory<\Database\Factories\RulingFactory> */
+    /** @use HasFactory<RulingFactory> */
     use HasFactory;
 
     protected $guarded = [];
