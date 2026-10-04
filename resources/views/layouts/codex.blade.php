@@ -76,8 +76,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <link rel="preconnect" href="https://analytics.notonfire.systems">
-
-    <script defer src="https://analytics.notonfire.systems/script.js" data-website-id="01a0726d-09b5-711e-8e63-0579e92d9c4f" data-domains="azorsvault.cards" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true" data-performance="true" referrerpolicy="no-referrer"></script>
 </head>
 <body class="bg-ink text-parchment font-sans antialiased">
     <div class="codex-bg relative min-h-screen isolate overflow-hidden">

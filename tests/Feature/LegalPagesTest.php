@@ -33,18 +33,25 @@ test('landing footer links to the legal pages', function () {
 });
 
 /*
- * The layout loads a self-hosted Umami script on every page, so the privacy
- * policy has to disclose it. It previously claimed the site had "no analytics".
+ * notonfire/php adds NotOnFire's analytics tag to every page and reports
+ * errors to it, so the privacy policy has to disclose both. It previously
+ * claimed the site had "no analytics". NotOnFire is presented as one service,
+ * without naming the software behind it.
  */
-test('privacy policy discloses the reach measurement that the layout loads', function () {
+test('privacy policy discloses NotOnFire reach measurement and error tracking', function () {
     $response = $this->get(route('privacy'));
 
     $response->assertOk()
+        ->assertSee('NotOnFire')
         ->assertSee('Reach Measurement')
         ->assertSee('analytics.notonfire.systems')
         ->assertSee('without cookies')
+        ->assertSee('Error Tracking')
+        ->assertSee('error.notonfire.systems')
         ->assertSee('Art. 6 (1) lit. f GDPR')
-        ->assertDontSee('no analytics');
+        ->assertDontSee('no analytics')
+        ->assertDontSee('Umami')
+        ->assertDontSee('GlitchTip');
 });
 
 test('every page that loads the measurement script is covered by the disclosure', function () {

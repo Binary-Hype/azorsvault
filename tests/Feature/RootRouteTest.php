@@ -27,13 +27,24 @@ test('logo.svg ships as a public asset matching the navbar mark', function () {
     expect(file_get_contents($path))->toContain('<svg')->toContain('</svg>');
 });
 
-test('root includes the analytics script', function () {
-    $this->get('/')
-        ->assertOk()
-        ->assertSee('https://analytics.notonfire.systems/script.js', false)
-        ->assertSee('data-website-id="01a0726d-09b5-711e-8e63-0579e92d9c4f"', false)
-        ->assertSee('data-domains="azorsvault.cards"', false)
-        ->assertSee('data-do-not-track="true"', false);
+/*
+ * notonfire/php injects the analytics tag before </head>, and only outside
+ * local and testing. A tag pasted into the layout as well would count every
+ * visit twice.
+ */
+test('root carries the analytics tag once in its head in production', function () {
+    app()->detectEnvironment(fn () => 'production');
+    config([
+        'notonfire.analytics.id' => '01a0726d-09b5-711e-8e63-0579e92d9c4f',
+        'notonfire.analytics.domains' => 'azorsvault.cards',
+    ]);
+
+    $html = $this->get('/')->assertOk()->getContent();
+    $head = substr($html, 0, strpos($html, '</head>'));
+
+    expect(substr_count($html, 'analytics.notonfire.systems/script.js'))->toBe(1)
+        ->and($head)->toContain('data-website-id="01a0726d-09b5-711e-8e63-0579e92d9c4f"')
+        ->and($head)->toContain('data-domains="azorsvault.cards"');
 });
 
 test('root serves fonts locally without contacting Google', function () {

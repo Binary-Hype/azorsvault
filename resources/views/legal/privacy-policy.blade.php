@@ -16,10 +16,10 @@
             <p>Data processing on this website is carried out by the website operator. You can find the operator's contact details in the section "Notice Concerning the Responsible Party" below.</p>
 
             <p class="font-semibold text-parchment">How do we collect your data?</p>
-            <p>Azorsvault has no forms and no user accounts. Data is collected automatically by our IT systems when you visit the website or when Claude connects to the MCP endpoint — this is primarily technical data such as browser version, operating system, and time of request. In addition, we measure reach with a self-hosted analytics instance that works without cookies and without any identifier on your device; this is described under "Reach Measurement" below.</p>
+            <p>Azorsvault has no forms and no user accounts. Data is collected automatically by our IT systems when you visit the website or when Claude connects to the MCP endpoint — this is primarily technical data such as browser version, operating system, and time of request. In addition, we use NotOnFire, our own self-hosted monitoring service, to measure reach without cookies or any identifier on your device and to record errors that occur in the application; this is described under "NotOnFire" below.</p>
 
             <p class="font-semibold text-parchment">What do we use your data for?</p>
-            <p>Part of the data is collected to ensure error-free provision of the website and MCP server. Log data may be reviewed to diagnose errors or abuse. Reach measurement tells us in aggregate which pages are used, so we can improve the service.</p>
+            <p>Part of the data is collected to ensure error-free provision of the website and MCP server. Log data may be reviewed to diagnose errors or abuse. Reach measurement tells us in aggregate which pages are used, so we can improve the service. Error reports tell us when something breaks, so we can fix it.</p>
 
             <p class="font-semibold text-parchment">What rights do you have regarding your data?</p>
             <p>You have the right to receive information about the origin, recipient, and purpose of your stored personal data free of charge at any time. You also have the right to request the correction or deletion of this data. If you have given consent to data processing, you can revoke this consent at any time for the future. You also have the right to request the restriction of the processing of your personal data under certain circumstances. Furthermore, you have the right to lodge a complaint with the competent supervisory authority.</p>
@@ -81,9 +81,11 @@
             <p>This data is not merged with other data sources.</p>
             <p>This data is collected on the basis of Art. 6 (1) lit. f GDPR. The website operator has a legitimate interest in the technically error-free presentation and optimization of the service — the server log files must be recorded for this purpose.</p>
 
-            <x-legal.subheading>Reach Measurement (Umami)</x-legal.subheading>
-            <p>This website uses Umami for reach measurement. Umami runs on our own server at <code class="font-mono text-[0.9em] text-accent">analytics.notonfire.systems</code>, operated by the same responsible party named above as part of the NotOnFire infrastructure and hosted with Hetzner in Germany. No data is transmitted to third parties, and no data leaves the European Union.</p>
-            <p>Umami works <strong class="font-semibold text-parchment">without cookies</strong> and places no identifier on your device. To group the visits of a single day, a hash that rotates daily is derived server-side from your IP address, user agent, and the domain; the IP address itself is not stored. There is no recognition across devices, across sites, or across days.</p>
+            <x-legal.subheading>NotOnFire (Reach Measurement and Error Tracking)</x-legal.subheading>
+            <p>This website uses NotOnFire for reach measurement and error tracking. NotOnFire is our own monitoring service, operated by the same responsible party named above and hosted with Hetzner in Germany. No data is transmitted to third parties, and no data leaves the European Union.</p>
+
+            <p class="font-semibold text-parchment">Reach Measurement</p>
+            <p>Reach is measured by a script that your browser loads from <code class="font-mono text-[0.9em] text-accent">analytics.notonfire.systems</code>. It works <strong class="font-semibold text-parchment">without cookies</strong> and places no identifier on your device. To group the visits of a single day, a hash that rotates daily is derived server-side from your IP address, user agent, and the domain; the IP address itself is not stored. There is no recognition across devices, across sites, or across days.</p>
             <p>The following is recorded:</p>
             <ul class="list-disc pl-6 space-y-1.5 marker:text-accent/60">
                 <li>The page visited and the referrer</li>
@@ -93,11 +95,15 @@
             </ul>
             <p>Search parameters and URL fragments are discarded before storage, and the count honours your browser's <code class="font-mono text-[0.9em] text-accent">Do Not Track</code> setting — if you enable it, no measurement takes place. Measurement data is kept for up to twelve months.</p>
             <p>The legal basis is Art. 6 (1) lit. f GDPR. We have a legitimate interest in the statistical, non-personalised analysis of usage in order to improve our service. Because the measurement uses no cookies and stores no information on your device, it requires no consent under § 25 (1) TTDSG.</p>
+
+            <p class="font-semibold text-parchment">Error Tracking</p>
+            <p>When an error occurs while the website or the MCP endpoint handles a request, our server sends an error report to <code class="font-mono text-[0.9em] text-accent">error.notonfire.systems</code>. Nothing is loaded in your browser for this. The report contains the error message, the stack trace, and the software environment (such as the PHP version). Request data, cookies, your IP address, user details, and the server name are removed before it is sent, and no performance traces or log entries are transmitted. The error message and stack trace can contain values the application was processing at the time, such as a card name from a search.</p>
+            <p>The legal basis is Art. 6 (1) lit. f GDPR. We have a legitimate interest in detecting and fixing errors so the service works reliably.</p>
         </x-legal.section>
 
         <x-legal.section heading="5. MCP Endpoint and Third-Party Data Sources">
             <x-legal.subheading>MCP Requests</x-legal.subheading>
-            <p>When Claude (or another MCP client) connects to the Azorsvault endpoint at <code class="font-mono text-[0.9em] text-accent">/mcp/mtg</code>, the request contains the tool name being invoked (for example <code class="font-mono text-[0.9em] text-accent">search-cards-advanced</code>) and its arguments — typically card names, search filters, or rule numbers. These requests are processed in-memory to answer the query and are not stored beyond the standard server log files described above. The MCP endpoint loads no measurement script and is not counted by Umami.</p>
+            <p>When Claude (or another MCP client) connects to the Azorsvault endpoint at <code class="font-mono text-[0.9em] text-accent">/mcp/mtg</code>, the request contains the tool name being invoked (for example <code class="font-mono text-[0.9em] text-accent">search-cards-advanced</code>) and its arguments — typically card names, search filters, or rule numbers. These requests are processed in-memory to answer the query and are not stored beyond the standard server log files described above. The MCP endpoint loads no measurement script and is not counted in reach measurement. If an error occurs while answering a request, it is reported as described under "Error Tracking" above.</p>
 
             <x-legal.subheading>Scryfall</x-legal.subheading>
             <p>To answer card-related queries, Azorsvault fetches data from the Scryfall API operated by Scryfall LLC (<x-legal.link href="https://scryfall.com">https://scryfall.com</x-legal.link>). These outbound calls include the search terms received from the MCP client but do not include the end-user's IP address or any identifying metadata. For details on Scryfall's processing, see <x-legal.link href="https://scryfall.com/docs/privacy-policy">https://scryfall.com/docs/privacy-policy</x-legal.link>.</p>
