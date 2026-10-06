@@ -16,6 +16,16 @@ class Card extends Model
 
     use SearchesFullText;
 
+    /**
+     * Formats tracked in the Scryfall legality data.
+     */
+    public const FORMATS = [
+        'standard', 'future', 'historic', 'timeless', 'gladiator', 'pioneer',
+        'explorer', 'modern', 'legacy', 'pauper', 'vintage', 'penny',
+        'commander', 'oathbreaker', 'standardbrawl', 'brawl', 'alchemy',
+        'paupercommander', 'duel', 'oldschool', 'premodern', 'predh',
+    ];
+
     public $incrementing = false;
 
     protected $keyType = 'string';
@@ -56,11 +66,41 @@ class Card extends Model
     }
 
     /**
+     * The name column's collation is case-insensitive, so a plain comparison
+     * matches regardless of case and can still use the index.
+     *
      * @param  Builder<Card>  $query
      */
     public function scopeByExactName(Builder $query, string $name): void
     {
-        $query->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+        $query->where('name', $name);
+    }
+
+    /**
+     * Narrow to the most recent printing of the card with this exact name.
+     *
+     * @param  Builder<Card>  $query
+     */
+    public function scopeLatestPrintingNamed(Builder $query, string $name): void
+    {
+        $query->byExactName($name)->orderByDesc('released_at');
+    }
+
+    /**
+     * Narrow to the most recent printing of each of these exact names, without
+     * loading every printing of a heavily reprinted card.
+     *
+     * @param  Builder<Card>  $query
+     * @param  array<int, string>  $names
+     */
+    public function scopeLatestPrintingsNamed(Builder $query, array $names): void
+    {
+        $ranked = static::query()
+            ->select('*')
+            ->selectRaw('ROW_NUMBER() OVER (PARTITION BY name ORDER BY released_at DESC) AS printing_rank')
+            ->whereIn('name', $names);
+
+        $query->fromSub($ranked, $this->getTable())->where('printing_rank', 1);
     }
 
     /**

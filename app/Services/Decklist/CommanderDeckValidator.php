@@ -42,7 +42,7 @@ class CommanderDeckValidator
 
         /*
          * An explicit commander may also appear in the deck body (Moxfield lists
-         * it in both places), so the deck entries are keyed to allow removal.
+         * it in both places), so one copy of it is taken out of the deck entries.
          */
         $deckEntries = $this->withoutCommanders($decklist['entries'], $commanderEntries);
 
@@ -68,7 +68,7 @@ class CommanderDeckValidator
         }
 
         if ($decklist['truncated']) {
-            $warnings[] = 'Decklist was truncated; only the first 500 entries were checked.';
+            $warnings[] = 'Decklist was truncated; only the first '.DecklistParser::MAX_ENTRIES.' entries were checked.';
         }
 
         $cardCount = array_sum(array_column($allEntries, 'quantity'));
@@ -142,8 +142,8 @@ class CommanderDeckValidator
     }
 
     /**
-     * Resolve card names to the most recent printing, accepting either face of
-     * a multi-faced card as well as its full "Front // Back" name.
+     * Resolve card names to the most recent printing, accepting the front face
+     * of a multi-faced card as well as its full "Front // Back" name.
      *
      * @param  array<int, string>  $names
      * @return Collection<string, Card>
@@ -156,13 +156,14 @@ class CommanderDeckValidator
             return collect();
         }
 
-        $placeholders = implode(',', array_fill(0, count($names), '?'));
-
-        $query = Card::query()
-            ->whereRaw("LOWER(name) IN ({$placeholders})", $names);
+        /*
+         * The name column's collation is case-insensitive, so plain comparisons
+         * match regardless of case and can still use the index.
+         */
+        $query = Card::query()->whereIn('name', $names);
 
         foreach ($names as $name) {
-            $query->orWhereRaw('LOWER(name) LIKE ?', [$name.' // %']);
+            $query->orWhere('name', 'LIKE', $name.' // %');
         }
 
         $cards = $query->orderByDesc('released_at')->get();
@@ -194,14 +195,16 @@ class CommanderDeckValidator
             $errors[] = 'A deck may have at most two commanders (via Partner or a Background).';
         }
 
-        foreach ($commanderEntries as $entry) {
-            $card = $cards->get(mb_strtolower($entry['name']));
+        $commanderCards = collect($commanderEntries)
+            ->map(fn (array $entry) => $cards->get(mb_strtolower($entry['name'])))
+            ->filter();
 
-            if ($card === null) {
-                continue;
-            }
+        $allowsBackground = $commanderCards->contains(
+            fn (Card $card) => str_contains(mb_strtolower((string) $card->oracle_text), 'choose a background'),
+        );
 
-            if (! $this->canBeCommander($card)) {
+        foreach ($commanderCards as $card) {
+            if (! $this->canBeCommander($card, $allowsBackground)) {
                 $errors[] = "{$card->name} cannot be a commander; it is not a legendary creature and does not say it can be your commander.";
             }
         }
@@ -209,11 +212,18 @@ class CommanderDeckValidator
         return $errors;
     }
 
-    private function canBeCommander(Card $card): bool
+    /**
+     * @param  bool  $allowsBackground  Whether another commander has "Choose a Background".
+     */
+    private function canBeCommander(Card $card, bool $allowsBackground): bool
     {
         $typeLine = (string) $card->type_line;
 
         if (str_contains($typeLine, 'Legendary') && str_contains($typeLine, 'Creature')) {
+            return true;
+        }
+
+        if ($allowsBackground && str_contains($typeLine, 'Background')) {
             return true;
         }
 

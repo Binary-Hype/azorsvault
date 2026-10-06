@@ -25,6 +25,18 @@ class ComprehensiveRule extends Model
         return [
             'effective_date' => 'date',
             'is_glossary' => 'boolean',
+            'position' => 'integer',
+        ];
+    }
+
+    /**
+     * @return array{rule_number: string, content: string}
+     */
+    public function toSearchResult(): array
+    {
+        return [
+            'rule_number' => $this->rule_number,
+            'content' => $this->content,
         ];
     }
 
@@ -74,5 +86,16 @@ class ComprehensiveRule extends Model
     public function scopeRules(Builder $query): void
     {
         $query->where('is_glossary', false);
+    }
+
+    /**
+     * Order rules as they appear in the rules file; rule numbers alone sort
+     * "702.100" before "702.11".
+     *
+     * @param  Builder<ComprehensiveRule>  $query
+     */
+    public function scopeInRulebookOrder(Builder $query): void
+    {
+        $query->orderBy('position')->orderBy('rule_number');
     }
 }

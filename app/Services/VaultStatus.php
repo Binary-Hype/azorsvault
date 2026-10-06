@@ -27,6 +27,12 @@ class VaultStatus
         return count($tools);
     }
 
+    /** The tool count spelled out, e.g. "eight", for prose that names it. */
+    public function toolCountInWords(): string
+    {
+        return Number::spell($this->toolCount());
+    }
+
     /**
      * Version label of the imported Comprehensive Rules, or null when nothing
      * has been imported yet.
@@ -66,7 +72,7 @@ class VaultStatus
 
         $segments = [
             'The vault is awake',
-            Number::spell($keys).' '.Str::plural('key', $keys).' hung on the wall',
+            $this->toolCountInWords().' '.Str::plural('key', $keys).' hung on the wall',
         ];
 
         if ($version = $this->rulesVersion()) {

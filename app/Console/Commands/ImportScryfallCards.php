@@ -111,12 +111,12 @@ class ImportScryfallCards extends Command
          * rather than letting the exception escape the command.
          */
         try {
-            foreach ($this->readJsonLines($stream) as $card) {
+            foreach ($bulkData->readJsonLines($stream) as $card) {
                 $batch[] = $this->extractCardData($card);
                 $count++;
 
                 if (count($batch) >= self::BATCH_SIZE) {
-                    $bulkData->upsertBatch(Card::class, $batch, ['id'], self::UPSERT_COLUMNS);
+                    Card::upsert($batch, ['id'], self::UPSERT_COLUMNS);
                     $batch = [];
 
                     if ($progressBar !== null) {
@@ -126,7 +126,7 @@ class ImportScryfallCards extends Command
             }
 
             if (count($batch) > 0) {
-                $bulkData->upsertBatch(Card::class, $batch, ['id'], self::UPSERT_COLUMNS);
+                Card::upsert($batch, ['id'], self::UPSERT_COLUMNS);
             }
         } catch (\JsonException $e) {
             $this->error("Malformed bulk data file: {$e->getMessage()}");
@@ -148,26 +148,6 @@ class ImportScryfallCards extends Command
     }
 
     /**
-     * Scryfall bulk data files are JSON Lines (one card object per line),
-     * not a single top-level JSON array.
-     *
-     * @param  resource  $stream
-     * @return \Generator<int, array<string, mixed>>
-     */
-    private function readJsonLines($stream): \Generator
-    {
-        while (($line = gzgets($stream)) !== false) {
-            $line = trim($line);
-
-            if ($line === '') {
-                continue;
-            }
-
-            yield json_decode($line, true, flags: JSON_THROW_ON_ERROR);
-        }
-    }
-
-    /**
      * @param  array<string, mixed>  $card
      * @return array<string, mixed>
      */
@@ -181,6 +161,7 @@ class ImportScryfallCards extends Command
         // oracle_text there since it differs per face. Transform/modal DFC
         // layouts omit all of these at the top level. Fall back to the
         // front face independently for whichever fields are missing.
+        // Reversible cards carry their oracle_id on the faces only.
         $manaCost = $card['mana_cost'] ?? $front['mana_cost'] ?? null;
         $oracleText = $card['oracle_text'] ?? $front['oracle_text'] ?? null;
         $colors = $card['colors'] ?? $front['colors'] ?? null;
@@ -191,7 +172,7 @@ class ImportScryfallCards extends Command
 
         return [
             'id' => $card['id'],
-            'oracle_id' => $card['oracle_id'] ?? null,
+            'oracle_id' => $card['oracle_id'] ?? $front['oracle_id'] ?? null,
             'name' => $card['name'],
             'mana_cost' => $manaCost,
             'cmc' => $card['cmc'] ?? null,

@@ -54,10 +54,21 @@ test('privacy policy discloses NotOnFire reach measurement and error tracking', 
         ->assertDontSee('GlitchTip');
 });
 
+/*
+ * The measurement script is only injected in production, so this renders each
+ * page as production would and checks that wherever the script loads, the
+ * page links the privacy policy that names its host.
+ */
 test('every page that loads the measurement script is covered by the disclosure', function () {
+    app()->detectEnvironment(fn () => 'production');
+    config(['notonfire.analytics.id' => '01a0726d-09b5-711e-8e63-0579e92d9c4f']);
+
     foreach (['/', route('imprint'), route('privacy')] as $url) {
         $this->get($url)
             ->assertOk()
-            ->assertSee('analytics.notonfire.systems', false);
+            ->assertSee('analytics.notonfire.systems/script.js', false)
+            ->assertSee('href="'.route('privacy').'"', false);
     }
+
+    $this->get(route('privacy'))->assertSee('analytics.notonfire.systems');
 });

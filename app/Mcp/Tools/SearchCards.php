@@ -25,19 +25,16 @@ class SearchCards extends Tool
         ]);
 
         $names = $validated['names'];
-        $loweredNames = array_map('mb_strtolower', $names);
 
         $cards = Card::with('rulings')
-            ->whereRaw('LOWER(name) IN ('.implode(',', array_fill(0, count($loweredNames), '?')).')', $loweredNames)
-            ->orderByDesc('released_at')
+            ->latestPrintingsNamed($names)
             ->get()
-            ->groupBy(fn (Card $card) => mb_strtolower($card->name));
+            ->keyBy(fn (Card $card) => mb_strtolower($card->name));
 
         $results = [];
 
         foreach ($names as $name) {
-            $match = $cards->get(mb_strtolower($name))?->first();
-            $results[$name] = $match?->toSearchResult();
+            $results[$name] = $cards->get(mb_strtolower($name))?->toSearchResult();
         }
 
         return Response::text(json_encode($results, JSON_PRETTY_PRINT));

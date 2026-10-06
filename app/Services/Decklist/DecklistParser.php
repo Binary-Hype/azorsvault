@@ -8,12 +8,12 @@ namespace App\Services\Decklist;
  */
 class DecklistParser
 {
-    private const MAX_ENTRIES = 500;
+    public const MAX_ENTRIES = 500;
 
     /**
      * Sections whose contents are not part of the deck proper.
      */
-    private const IGNORED_SECTIONS = ['sideboard', 'maybeboard', 'considering', 'tokens', 'token'];
+    private const IGNORED_SECTIONS = ['sideboard', 'maybeboard', 'considering', 'tokens', 'token', 'companion'];
 
     /**
      * Sections that hold the deck's commander(s).
@@ -108,7 +108,7 @@ class DecklistParser
         $known = array_merge(
             self::COMMANDER_SECTIONS,
             self::IGNORED_SECTIONS,
-            ['deck', 'mainboard', 'main', 'companion', 'planeswalker', 'signature spell'],
+            ['deck', 'mainboard', 'main', 'planeswalker', 'signature spell'],
         );
 
         return in_array($name, $known, true) ? $name : null;

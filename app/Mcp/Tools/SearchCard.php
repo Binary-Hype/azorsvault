@@ -24,8 +24,7 @@ class SearchCard extends Tool
         ]);
 
         $card = Card::with('rulings')
-            ->byExactName($validated['name'])
-            ->orderByDesc('released_at')
+            ->latestPrintingNamed($validated['name'])
             ->first();
 
         if (! $card) {

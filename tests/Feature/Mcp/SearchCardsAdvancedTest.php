@@ -111,6 +111,16 @@ test('it filters by format legality', function () {
         ->assertSee('Lightning Bolt');
 });
 
+/*
+ * The format is spliced into a JSON path, so an unknown one used to reach the
+ * database as an invalid path and fail with an SQL error.
+ */
+test('it rejects an unknown format with a validation error', function () {
+    $response = MtgServer::tool(SearchCardsAdvanced::class, ['format' => 'pauper commander']);
+
+    $response->assertHasErrors(['The selected format is invalid.']);
+});
+
 test('it filters by keyword', function () {
     Card::factory()->create(['name' => 'Serra Angel', 'keywords' => ['Flying', 'Vigilance']]);
     Card::factory()->create(['name' => 'Grizzly Bears', 'keywords' => []]);

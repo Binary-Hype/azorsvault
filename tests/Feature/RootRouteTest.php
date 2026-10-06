@@ -55,10 +55,15 @@ test('root serves fonts locally without contacting Google', function () {
         ->assertSee('@font-face', false);
 });
 
-test('root preconnects to the analytics origin', function () {
+/*
+ * The layout used to hardcode a preconnect to the analytics host, even where
+ * no analytics tag is injected. The tag sits at the end of <head> anyway, so
+ * the hint bought nothing.
+ */
+test('root contacts no analytics host when no analytics tag is injected', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSee('<link rel="preconnect" href="https://analytics.notonfire.systems"', false);
+        ->assertDontSee('analytics.notonfire.systems', false);
 });
 
 /*

@@ -10,6 +10,8 @@ namespace App\Services;
  */
 class SitePages
 {
+    public function __construct(private VaultStatus $vaultStatus) {}
+
     /**
      * @return list<array{route: string, priority: string, changefreq: string, title: string, summary: string}>
      */
@@ -21,7 +23,7 @@ class SitePages
                 'priority' => '1.0',
                 'changefreq' => 'weekly',
                 'title' => 'Azorsvault',
-                'summary' => 'What the Magic: The Gathering MCP server does, how to connect it to Claude, and the eight tools it exposes.',
+                'summary' => 'What the Magic: The Gathering MCP server does, how to connect it to Claude, and the '.$this->vaultStatus->toolCountInWords().' tools it exposes.',
             ],
             [
                 'route' => 'imprint',

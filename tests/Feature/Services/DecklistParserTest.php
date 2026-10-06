@@ -49,6 +49,17 @@ test('it reads section headers that carry a count or a colon', function () {
         ->and($parsed['ignored_sections'])->toBe(['sideboard']);
 });
 
+/*
+ * A companion starts the game outside it, so counting it into the deck used
+ * to report a correct 100-card list as 101 cards.
+ */
+test('it keeps the companion out of the deck', function () {
+    $parsed = app(DecklistParser::class)->parse("Companion\n1 Jegantha, the Wellspring\n\nDeck\n1 Sol Ring");
+
+    expect($parsed['entries'])->toBe([['name' => 'Sol Ring', 'quantity' => 1]])
+        ->and($parsed['ignored_sections'])->toBe(['companion']);
+});
+
 test('it skips blank lines and comments', function () {
     $parsed = app(DecklistParser::class)->parse("// my deck\n\n1 Sol Ring\n# a note");
 

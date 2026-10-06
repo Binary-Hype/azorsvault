@@ -2,7 +2,6 @@
 
 @section('title', 'Privacy Policy — Azorsvault')
 @section('description', 'Privacy policy of the Azorsvault MTG MCP server. Information about the collection and processing of personal data.')
-@section('og_title', 'Privacy Policy — Azorsvault')
 @section('og_description', 'Privacy policy of the Azorsvault MTG MCP server.')
 
 @section('content')

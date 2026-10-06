@@ -167,3 +167,21 @@ test('byNameSearch requires every indexable term', function () {
 
     expect(Card::byNameSearch('Lightning Bolt')->count())->toBe(1);
 });
+
+/*
+ * Operators used to be deleted, so "Lim-Dûl" became the single term "LimDûl",
+ * which the index (it splits on the hyphen) never contains.
+ */
+test('byNameSearch treats boolean operators as word breaks', function () {
+    Card::factory()->create(['name' => 'Lim-Dûl the Necromancer']);
+    Card::factory()->create(['name' => 'Lightning Bolt']);
+
+    expect(Card::byNameSearch('Lim-Dûl')->pluck('name')->all())->toBe(['Lim-Dûl the Necromancer']);
+});
+
+test('byNameSearch matches LIKE wildcards literally in the fallback', function () {
+    Card::factory()->create(['name' => '_____ Goblin']);
+    Card::factory()->create(['name' => 'Opt']);
+
+    expect(Card::byNameSearch('_')->pluck('name')->all())->toBe(['_____ Goblin']);
+});

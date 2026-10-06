@@ -14,7 +14,7 @@ Or hand the endpoint to any MCP-capable client: {{ url('/mcp/mtg') }}
 
 - search-card — one card by name, newest printing.
 - search-cards — up to 100 names at once, for decklists.
-- search-cards-advanced — 15 stackable filters (colors, color identity, mana cost, oracle text, type, subtype, rarity, set, keyword, power, toughness, cmc, format, legality, EDHREC rank).
+- search-cards-advanced — stackable filters on name, mana cost, oracle text, type, subtype, colours, colour identity, rarity, set, keyword, power, toughness, mana value, format legality, EDHREC rank and Game Changer status; up to 50 unique cards.
 - search-rules — full-text search across the Comprehensive Rules and glossary.
 - get-rule — a rule, chapter, section or glossary term by number, with its subrules.
 - check-legality — per-format legality for a card, plus Game Changer and Reserved List status.
@@ -24,7 +24,7 @@ Or hand the endpoint to any MCP-capable client: {{ url('/mcp/mtg') }}
 ## Pages
 
 @foreach ($pages as $page)
-- [{{ $page['title'] }}]({{ route($page['route']) }}): {{ $page['summary'] }}
+- [{!! $page['title'] !!}]({{ route($page['route']) }}): {!! $page['summary'] !!}
 @endforeach
 
 ## Notes

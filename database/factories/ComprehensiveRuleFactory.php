@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ComprehensiveRuleFactory extends Factory
 {
+    /** Rules are numbered in creation order, as the importer numbers them in file order. */
+    private static int $position = 0;
+
     /**
      * @return array<string, mixed>
      */
@@ -24,6 +27,7 @@ class ComprehensiveRuleFactory extends Factory
             'chapter' => $chapter,
             'content' => fake()->sentence(),
             'is_glossary' => false,
+            'position' => ++self::$position,
             'effective_date' => '2026-02-27',
         ];
     }

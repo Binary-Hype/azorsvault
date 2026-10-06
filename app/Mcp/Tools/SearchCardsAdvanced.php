@@ -5,6 +5,7 @@ namespace App\Mcp\Tools;
 use App\Models\Card;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -36,7 +37,7 @@ class SearchCardsAdvanced extends Tool
             'toughness' => 'nullable|string|max:10',
             'cmc' => 'nullable|numeric|min:0',
             'cmc_operator' => 'nullable|string|in:=,<,>,<=,>=',
-            'format' => 'nullable|string|max:30',
+            'format' => ['nullable', 'string', Rule::in(Card::FORMATS)],
             'legality' => 'nullable|string|in:legal,not_legal,restricted,banned',
             'max_edhrec_rank' => 'nullable|integer|min:1',
             'game_changer' => 'nullable|boolean',
@@ -149,7 +150,8 @@ class SearchCardsAdvanced extends Tool
                 ->enum(['=', '<', '>', '<=', '>='])
                 ->description('Comparison operator for cmc filter. Defaults to "=".'),
             'format' => $schema->string()
-                ->description('Filter by format legality. E.g. "standard", "commander", "modern", "legacy", "pioneer", "pauper", "vintage".'),
+                ->enum(Card::FORMATS)
+                ->description('Filter by format legality, e.g. "standard", "commander", "modern".'),
             'legality' => $schema->string()
                 ->enum(['legal', 'not_legal', 'restricted', 'banned'])
                 ->description('Legality status for the format filter. Defaults to "legal".'),

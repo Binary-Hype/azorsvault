@@ -115,7 +115,30 @@ test('it reports the total and a note when a chapter is truncated', function () 
     $response->assertOk()
         ->assertSee('"count": 100')
         ->assertSee('"total": 105')
-        ->assertSee('Results truncated');
+        ->assertSee('Results truncated')
+        ->assertDontSee('Use a chapter number');
+});
+
+/*
+ * Rule numbers sort as strings ("702.100" before "702.11"), so a truncated
+ * chapter used to keep 702.100+ and drop 702.11 onwards instead of the tail.
+ */
+test('it returns a chapter in rulebook order rather than string order', function () {
+    ComprehensiveRule::factory()
+        ->count(101)
+        ->sequence(fn ($sequence) => [
+            'rule_number' => '702.'.(101 - $sequence->index),
+            'chapter' => '702',
+            'section' => 7,
+            'position' => 101 - $sequence->index,
+        ])
+        ->create();
+
+    $response = MtgServer::tool(GetRule::class, ['rule_number' => '702']);
+
+    $response->assertOk()
+        ->assertSee(['"702.2"', '"702.10"', '"702.99"', '"702.100"'])
+        ->assertDontSee('"702.101"');
 });
 
 /*

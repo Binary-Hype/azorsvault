@@ -15,10 +15,10 @@ use Illuminate\Support\HtmlString;
  * in a fallback face, then reflows when the real face arrives. Preloading the
  * files fixes that by getting them in before first paint.
  *
- * Google splits each family into ~27 subsets but serves one variable-weight
- * file per family and style. Filtering the cached stylesheet to the faces
- * carrying the basic-latin range leaves 14 of its 82 rules — the stylesheet the
- * package would inline is 34 KB, of which these pages use about 6 KB.
+ * Google splits each family into many unicode-range subsets, each with its
+ * own `@font-face` rule. These pages only render the basic-latin subset, so
+ * the cached stylesheet is filtered down to those rules rather than inlined
+ * whole — a small fraction of what the package would emit.
  */
 class LatinFonts
 {
@@ -27,6 +27,14 @@ class LatinFonts
      * unicode-range, and only this one covers the characters on these pages.
      */
     private const LATIN_RANGE = 'U+0000-00FF';
+
+    /**
+     * The basic-latin faces, parsed once per instance: the layout asks for
+     * both the preloads and the stylesheet on every render.
+     *
+     * @var list<string>|null
+     */
+    private ?array $latinFaces = null;
 
     /**
      * The `@font-face` rules for the basic-latin subset, as an inline
@@ -49,7 +57,8 @@ class LatinFonts
         return new HtmlString('<style>'.trim($css).'</style>');
     }
 
-    public function toHtml(): HtmlString
+    /** One `<link rel="preload">` tag per basic-latin font file. */
+    public function preloadTags(): HtmlString
     {
         $links = collect($this->files())
             ->map(fn (string $url): string => sprintf(
@@ -87,15 +96,19 @@ class LatinFonts
      */
     private function latinFaces(): array
     {
+        if ($this->latinFaces !== null) {
+            return $this->latinFaces;
+        }
+
         $css = $this->stylesheet();
 
         if ($css === null) {
-            return [];
+            return $this->latinFaces = [];
         }
 
         preg_match_all('/@font-face\s*\{[^}]*\}/', $css, $faces);
 
-        return collect($faces[0])
+        return $this->latinFaces = collect($faces[0])
             ->filter(fn (string $face): bool => str_contains($face, self::LATIN_RANGE))
             ->values()
             ->all();

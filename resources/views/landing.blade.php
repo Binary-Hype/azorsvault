@@ -1,30 +1,58 @@
 @inject('vaultStatus', 'App\\Services\\VaultStatus')
 @extends('layouts.codex')
+@use('Illuminate\Support\Number')
+@use('Illuminate\Support\Str')
 
 @php
     $mcpUrl = url('/mcp/mtg');
     $cliCommand = "claude mcp add --transport http azorsvault {$mcpUrl}";
+
+    /*
+     * The parameters of search-cards-advanced, as the Sieve shows them: paired
+     * parameters share a row and `limit` is not a filter. Every count of the
+     * filters on this page is taken from this list.
+     */
+    $sieves = [
+        ['filter' => 'name',              'reads' => 'whole or part, spelled loosely'],
+        ['filter' => 'mana_cost',         'reads' => 'exactly, as written: {2}{R}{R}'],
+        ['filter' => 'oracle_text',       'reads' => "any phrase in the card's own words"],
+        ['filter' => 'type_line',         'reads' => 'Legendary Creature, and the like'],
+        ['filter' => 'subtype',           'reads' => 'whatever follows the em-dash'],
+        ['filter' => 'colors',            'reads' => 'W U B R G — all of them, together'],
+        ['filter' => 'color_identity',    'reads' => 'what a commander permits'],
+        ['filter' => 'rarity',            'reads' => 'common · uncommon · rare · mythic'],
+        ['filter' => 'set',               'reads' => 'the three letters on the spine'],
+        ['filter' => 'keyword',           'reads' => 'Flying, Ward, Cascade…'],
+        ['filter' => 'power · toughness', 'reads' => 'asterisks welcome'],
+        ['filter' => 'cmc + cmc_operator','reads' => '= · < · > · <= · >='],
+        ['filter' => 'format',            'reads' => 'standard · commander · modern…'],
+        ['filter' => 'legality',          'reads' => 'legal · not_legal · restricted · banned'],
+        ['filter' => 'max_edhrec_rank',   'reads' => 'lower means better loved'],
+        ['filter' => 'game_changer',      'reads' => 'only the Game Changers, or none of them'],
+    ];
+    $sieveCount = Number::spell(count($sieves));
+    $toolCount = $vaultStatus->toolCountInWords();
 @endphp
 
 @push('structured-data')
     <x-json-ld :data="[
         '@context' => 'https://schema.org',
         '@type' => 'SoftwareApplication',
-        '@id' => url('/').'#app',
+        '@id' => route('home').'#app',
         'name' => 'Azorsvault',
         'applicationCategory' => 'DeveloperApplication',
         'applicationSubCategory' => 'MCP server',
         'operatingSystem' => 'Any',
-        'url' => url('/'),
+        'url' => route('home'),
         'description' => 'A Model Context Protocol server for Magic: The Gathering. It gives Claude read-only tools over every Scryfall card, its rulings, format legality and the Comprehensive Rules, plus Commander deck validation.',
         'inLanguage' => 'en',
         'isAccessibleForFree' => true,
         'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'EUR'],
-        'publisher' => ['@id' => url('/').'#organization'],
+        'publisher' => ['@id' => route('home').'#organization'],
         'featureList' => [
             'Card lookup by name, newest printing',
             'Batch card lookup for decklists, up to 100 names',
-            'Advanced card search across fifteen stackable filters',
+            'Advanced card search across '.$sieveCount.' stackable filters',
             'Full-text search of the Comprehensive Rules and glossary',
             'Rule, chapter, section and glossary lookup with subrules',
             'Per-format legality, Game Changer and Reserved List status',
@@ -121,30 +149,18 @@
 
     {{-- II. The Sieve --}}
     <section id="sieve" class="codex-band relative z-10 px-5 py-14 sm:px-22 sm:py-22 border-t border-gold/20">
-        <x-chapter numeral="II" name="The Sieve" heading="Fifteen ways to narrow a fate" :wide="true">
+        <x-chapter numeral="II" name="The Sieve" :heading="ucfirst($sieveCount).' ways to narrow a fate'" :wide="true">
             Every sieve below can be laid over the others at once. Ask for one, ask for nine. What falls through is
             deduplicated by oracle identity, fifty at most.
         </x-chapter>
 
         <div class="max-w-[1180px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gold/20 border border-gold/20">
-            @foreach ([
-                ['filter' => 'name',              'reads' => 'whole or part, spelled loosely'],
-                ['filter' => 'mana_cost',         'reads' => 'exactly, as written: {2}{R}{R}'],
-                ['filter' => 'oracle_text',       'reads' => "any phrase in the card's own words"],
-                ['filter' => 'type_line',         'reads' => 'Legendary Creature, and the like'],
-                ['filter' => 'subtype',           'reads' => 'whatever follows the em-dash'],
-                ['filter' => 'colors',            'reads' => 'W U B R G — all of them, together'],
-                ['filter' => 'color_identity',    'reads' => 'what a commander permits'],
-                ['filter' => 'rarity',            'reads' => 'common · uncommon · rare · mythic'],
-                ['filter' => 'set',               'reads' => 'the three letters on the spine'],
-                ['filter' => 'keyword',           'reads' => 'Flying, Ward, Cascade…'],
-                ['filter' => 'power · toughness', 'reads' => 'asterisks welcome'],
-                ['filter' => 'cmc + cmc_operator','reads' => '= · < · > · <= · >='],
-                ['filter' => 'format',            'reads' => 'standard · commander · modern…'],
-                ['filter' => 'legality',          'reads' => 'legal · not_legal · restricted · banned'],
-                ['filter' => 'max_edhrec_rank',   'reads' => 'lower means better loved'],
-            ] as $sieve)
-                <div class="flex flex-col gap-1.5 px-6 py-5 bg-[#08101f] hover:bg-ink-2 transition-colors">
+            @foreach ($sieves as $sieve)
+                <div @class([
+                    'flex flex-col gap-1.5 px-6 py-5 bg-[#08101f] hover:bg-ink-2 transition-colors',
+                    'lg:col-span-3' => $loop->last && $loop->count % 3 === 1,
+                    'lg:col-span-2' => $loop->last && $loop->count % 3 === 2,
+                ])>
                     <div class="font-mono text-[13.5px] text-parchment">{{ $sieve['filter'] }}</div>
                     <div class="text-[15.5px] text-parchment/58">{{ $sieve['reads'] }}</div>
                 </div>
@@ -162,7 +178,7 @@
         <div class="max-w-[1180px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-6 lg:gap-10 items-start">
             <div class="flex flex-col p-5 sm:px-8.5 sm:pt-7.5 sm:pb-6 bg-ink-2/72 border border-gold/22 rounded-[3px]">
                 <div class="font-mono text-[10.5px] tracking-[0.2em] uppercase text-accent/80 mb-2">validate-deck</div>
-                <div class="font-display text-[38px] sm:text-[46px] leading-none text-[#f3ecd9] mb-2.5">What the scales test</div>
+                <h3 class="font-display text-[38px] sm:text-[46px] leading-none text-[#f3ecd9] mb-2.5">What the scales test</h3>
 
                 @foreach ([
                     ['law' => 'A hundred, counted',        'note' => 'Commander asks for exactly one hundred cards, the commander among them.'],
@@ -216,17 +232,17 @@ Sideboard
         </div>
     </section>
 
-    {{-- IV. The Eight Keys --}}
+    {{-- IV. The Keys --}}
     <section id="keys" class="relative z-10 px-5 py-14 sm:px-22 sm:py-22 border-t border-gold/20">
-        <x-chapter numeral="IV" name="The Eight Keys" heading="A small ring, on purpose">
-            Eight doors is all the vault has. Anything worth asking fits through one of them.
+        <x-chapter numeral="IV" :name="'The '.Str::title($toolCount).' Keys'" heading="A small ring, on purpose">
+            {{ ucfirst($toolCount) }} doors is all the vault has. Anything worth asking fits through one of them.
         </x-chapter>
 
         <div class="max-w-[1180px] mx-auto flex flex-col">
             @foreach ([
                 ['n' => 'I',    'tool' => 'search-card',           'does' => 'One card, called by its true name. The vault hands back its newest printing.',                                                              'takes' => 'name'],
                 ['n' => 'II',   'tool' => 'search-cards',          'does' => 'A whole roll call at once — for decklists. Each name comes back with its card, or with nothing.',                                          'takes' => 'names[1–100]'],
-                ['n' => 'III',  'tool' => 'search-cards-advanced', 'does' => 'The Sieve itself. Stack any of the fifteen filters; fifty results come through, no duplicates.',                                           'takes' => '15 filters'],
+                ['n' => 'III',  'tool' => 'search-cards-advanced', 'does' => "The Sieve itself. Stack any of the {$sieveCount} filters; up to fifty results come through, no duplicates.",                              'takes' => count($sieves).' filters'],
                 ['n' => 'IV',   'tool' => 'search-rules',          'does' => 'Hunt a phrase through the Comprehensive Rules and the glossary that guards them.',                                                         'takes' => 'query · section · chapter'],
                 ['n' => 'V',    'tool' => 'get-rule',              'does' => 'One rule, one chapter, one section, one glossary term — whichever shape you ask in. Ask for 702.19 and its lettered subrules come with it.', 'takes' => 'rule_number'],
                 ['n' => 'VI',   'tool' => 'check-legality',        'does' => 'Where a card may be played, and where it is forbidden. Also whether it is a Game Changer, and whether the Reserved List guards it.',       'takes' => 'name'],

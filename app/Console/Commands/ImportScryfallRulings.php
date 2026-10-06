@@ -106,12 +106,12 @@ class ImportScryfallRulings extends Command
          * rather than letting the exception escape the command.
          */
         try {
-            foreach ($this->readJsonLines($stream) as $ruling) {
+            foreach ($bulkData->readJsonLines($stream) as $ruling) {
                 $batch[] = $this->extractRulingData($ruling);
                 $count++;
 
                 if (count($batch) >= self::BATCH_SIZE) {
-                    $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
+                    Ruling::upsert($batch, ['content_hash'], self::UPSERT_COLUMNS);
                     $batch = [];
 
                     if ($progressBar !== null) {
@@ -121,7 +121,7 @@ class ImportScryfallRulings extends Command
             }
 
             if (count($batch) > 0) {
-                $bulkData->upsertBatch(Ruling::class, $batch, ['content_hash'], self::UPSERT_COLUMNS);
+                Ruling::upsert($batch, ['content_hash'], self::UPSERT_COLUMNS);
             }
         } catch (\JsonException $e) {
             $this->error("Malformed bulk data file: {$e->getMessage()}");
@@ -140,26 +140,6 @@ class ImportScryfallRulings extends Command
         gzclose($stream);
 
         return $count;
-    }
-
-    /**
-     * Scryfall bulk data files are JSON Lines (one ruling object per line),
-     * not a single top-level JSON array.
-     *
-     * @param  resource  $stream
-     * @return \Generator<int, array<string, mixed>>
-     */
-    private function readJsonLines($stream): \Generator
-    {
-        while (($line = gzgets($stream)) !== false) {
-            $line = trim($line);
-
-            if ($line === '') {
-                continue;
-            }
-
-            yield json_decode($line, true, flags: JSON_THROW_ON_ERROR);
-        }
     }
 
     /**

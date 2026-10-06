@@ -23,10 +23,7 @@ class CheckLegality extends Tool
             'name' => 'required|string|max:300',
         ]);
 
-        $card = Card::query()
-            ->byExactName($validated['name'])
-            ->orderByDesc('released_at')
-            ->first();
+        $card = Card::latestPrintingNamed($validated['name'])->first();
 
         if (! $card) {
             return Response::error("Card not found: \"{$validated['name']}\". Try using search-cards-advanced with a name search for partial matches.");
@@ -39,8 +36,8 @@ class CheckLegality extends Tool
             'legalities' => $legalities,
             'banned_in' => array_keys(array_filter($legalities, fn (string $status) => $status === 'banned')),
             'restricted_in' => array_keys(array_filter($legalities, fn (string $status) => $status === 'restricted')),
-            'game_changer' => (bool) $card->game_changer,
-            'reserved' => (bool) $card->reserved,
+            'game_changer' => $card->game_changer,
+            'reserved' => $card->reserved,
         ], JSON_PRETTY_PRINT));
     }
 

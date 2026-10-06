@@ -1,6 +1,7 @@
 <?php
 
 use App\Mcp\Servers\MtgServer;
+use App\Services\SitePages;
 
 test('the sitemap lists every indexable page', function () {
     $response = $this->get(route('sitemap'))
@@ -43,6 +44,44 @@ test('llms.txt links every page the sitemap carries', function () {
     foreach (['home', 'imprint', 'privacy'] as $routeName) {
         $response->assertSee(route($routeName), false);
     }
+});
+
+/*
+ * llms.txt is text/plain, so HTML-escaping its entries would hand readers
+ * "&amp;" and "&#039;" verbatim.
+ */
+test('llms.txt prints page titles and summaries as plain text', function () {
+    $this->mock(SitePages::class)->shouldReceive('all')->andReturn([[
+        'route' => 'home',
+        'priority' => '1.0',
+        'changefreq' => 'weekly',
+        'title' => 'Terms & Conditions',
+        'summary' => "The vault's small print.",
+    ]]);
+
+    $this->get(route('llms'))
+        ->assertOk()
+        ->assertSee('- [Terms & Conditions]('.route('home')."): The vault's small print.", false)
+        ->assertDontSee('&amp;', false)
+        ->assertDontSee('&#039;', false);
+});
+
+test('social metadata follows the page title and description unless a page overrides it', function () {
+    $this->get(route('imprint'))
+        ->assertOk()
+        ->assertSee('<meta property="og:title" content="Imprint — Azorsvault">', false)
+        ->assertSee('<meta property="og:description" content="Legal notice and provider identification for the Azorsvault MTG MCP server.">', false)
+        ->assertSee('<meta name="twitter:title" content="Imprint — Azorsvault">', false);
+
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee('<meta property="og:title" content="Privacy Policy — Azorsvault">', false)
+        ->assertSee('<meta property="og:description" content="Privacy policy of the Azorsvault MTG MCP server.">', false);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('<meta property="og:title" content="Azorsvault — Magic: The Gathering MCP Server for Claude">', false)
+        ->assertSee('<meta property="og:description" content="An MCP server for Magic: The Gathering, wired into Claude.">', false);
 });
 
 test('pages carry a canonical url and indexing directives', function (string $routeName) {

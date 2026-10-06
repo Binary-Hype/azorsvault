@@ -5,7 +5,9 @@ document.addEventListener('click', (event) => {
 
     const value = button.dataset.copy;
     const flip = button.querySelector('.codex-flip');
+    const status = button.querySelector('[data-copy-status]');
 
+    // Returns whether the legacy copy actually went through.
     const fallback = () => {
         const ta = document.createElement('textarea');
         ta.value = value;
@@ -14,27 +16,33 @@ document.addEventListener('click', (event) => {
         ta.style.left = '-9999px';
         document.body.appendChild(ta);
         ta.select();
+        let copied = false;
         try {
-            document.execCommand('copy');
+            copied = document.execCommand('copy');
         } catch (_) {
-            // swallow — clipboard may be unavailable (insecure context, permissions)
+            // clipboard may be unavailable (insecure context, permissions)
         }
         document.body.removeChild(ta);
+        return copied;
     };
 
     const done = () => {
+        if (status) status.textContent = 'Copied';
         if (!flip) return;
         flip.classList.add('copied');
-        setTimeout(() => flip.classList.remove('copied'), 1600);
+        setTimeout(() => {
+            flip.classList.remove('copied');
+            if (status) status.textContent = '';
+        }, 1600);
+    };
+
+    const copyWithFallback = () => {
+        if (fallback()) done();
     };
 
     if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(value).then(done).catch(() => {
-            fallback();
-            done();
-        });
+        navigator.clipboard.writeText(value).then(done).catch(copyWithFallback);
     } else {
-        fallback();
-        done();
+        copyWithFallback();
     }
 });

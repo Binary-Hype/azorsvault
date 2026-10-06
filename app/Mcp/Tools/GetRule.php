@@ -36,10 +36,7 @@ class GetRule extends Tool
                 return Response::error("Glossary entry not found: \"{$input}\". Try using search-rules to search for the term.");
             }
 
-            return Response::text(json_encode([
-                'rule_number' => $rule->rule_number,
-                'content' => $rule->content,
-            ], JSON_PRETTY_PRINT));
+            return Response::text(json_encode($rule->toSearchResult(), JSON_PRETTY_PRINT));
         }
 
         // Section lookup: single digit "1" through "9"
@@ -59,10 +56,7 @@ class GetRule extends Tool
             return Response::error("Rule not found: \"{$input}\". Try using search-rules to search by keyword.");
         }
 
-        $result = [
-            'rule_number' => $rule->rule_number,
-            'content' => $rule->content,
-        ];
+        $result = $rule->toSearchResult();
 
         $subrules = $this->fetchSubrules($rule->rule_number);
 
@@ -90,14 +84,10 @@ class GetRule extends Tool
             ->rules()
             ->where('rule_number', 'LIKE', $ruleNumber.'%')
             ->whereRaw('rule_number REGEXP ?', [$pattern])
-            ->orderBy('rule_number')
+            ->inRulebookOrder()
             ->limit(self::MAX_RESULTS)
             ->get()
-            ->map(fn (ComprehensiveRule $subrule) => [
-                'rule_number' => $subrule->rule_number,
-                'content' => $subrule->content,
-            ])
-            ->values()
+            ->map(fn (ComprehensiveRule $subrule) => $subrule->toSearchResult())
             ->all();
     }
 
@@ -106,6 +96,7 @@ class GetRule extends Tool
         return $this->respondWithRules(
             ComprehensiveRule::bySection($section)->rules(),
             "No rules found for section {$section}.",
+            'Results truncated. Use a chapter number (e.g. "704") for more targeted results.',
         );
     }
 
@@ -114,6 +105,7 @@ class GetRule extends Tool
         return $this->respondWithRules(
             ComprehensiveRule::byChapter($chapter)->rules(),
             "No rules found for chapter {$chapter}.",
+            'Results truncated. Use a rule number (e.g. "702.19") for that rule and its subrules, or search-rules with a chapter filter.',
         );
     }
 
@@ -121,13 +113,14 @@ class GetRule extends Tool
      * Return a capped, ordered list of rules, flagging when results were cut off.
      *
      * @param  Builder<ComprehensiveRule>  $query
+     * @param  string  $truncatedNote  How to narrow the query, shown when results were cut off.
      */
-    private function respondWithRules(Builder $query, string $emptyMessage): Response
+    private function respondWithRules(Builder $query, string $emptyMessage, string $truncatedNote): Response
     {
         $total = (clone $query)->count();
 
         $rules = $query
-            ->orderBy('rule_number')
+            ->inRulebookOrder()
             ->limit(self::MAX_RESULTS)
             ->get();
 
@@ -138,14 +131,11 @@ class GetRule extends Tool
         $result = [
             'count' => $rules->count(),
             'total' => $total,
-            'rules' => $rules->map(fn (ComprehensiveRule $rule) => [
-                'rule_number' => $rule->rule_number,
-                'content' => $rule->content,
-            ])->all(),
+            'rules' => $rules->map(fn (ComprehensiveRule $rule) => $rule->toSearchResult())->all(),
         ];
 
         if ($total > self::MAX_RESULTS) {
-            $result['note'] = 'Results truncated. Use a chapter number (e.g. "704") for more targeted results.';
+            $result['note'] = $truncatedNote;
         }
 
         return Response::text(json_encode($result, JSON_PRETTY_PRINT));

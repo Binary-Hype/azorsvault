@@ -1,6 +1,6 @@
 @props(['value', 'label', 'text' => 'Copy'])
 
-{{-- The label flips to "Copied" for 1.6s; the swap itself lives in resources/js/landing.js. --}}
+{{-- The label flips to "Copied" for 1.6s, and the status span announces it; the swap itself lives in resources/js/landing.js. --}}
 <button type="button" data-copy="{{ $value }}" aria-label="{{ $label }}" {{ $attributes }}>
     <span class="codex-flip">
         <span class="codex-flip-face">
@@ -12,4 +12,5 @@
             <span>Copied</span>
         </span>
     </span>
+    <span class="sr-only" role="status" aria-live="polite" data-copy-status></span>
 </button>

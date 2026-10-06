@@ -2,8 +2,6 @@
 
 @section('title', 'Imprint — Azorsvault')
 @section('description', 'Legal notice and provider identification for the Azorsvault MTG MCP server.')
-@section('og_title', 'Imprint — Azorsvault')
-@section('og_description', 'Legal notice and provider identification for the Azorsvault MTG MCP server.')
 
 @section('content')
     <x-legal.page heading="Imprint">

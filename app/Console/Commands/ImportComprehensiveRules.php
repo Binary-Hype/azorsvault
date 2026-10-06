@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\ComprehensiveRule;
+use App\Services\Scryfall\BulkDataService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -77,7 +78,7 @@ class ImportComprehensiveRules extends Command
 
     private function discoverDownloadUrl(): ?string
     {
-        $response = Http::withUserAgent('MtgMCP/1.0')->get(self::RULES_PAGE_URL);
+        $response = Http::withUserAgent(BulkDataService::USER_AGENT)->get(self::RULES_PAGE_URL);
 
         if (! $response->successful()) {
             return null;
@@ -109,14 +110,20 @@ class ImportComprehensiveRules extends Command
             mkdir($directory, 0755, true);
         }
 
-        $response = Http::withUserAgent('MtgMCP/1.0')
+        $response = Http::withUserAgent(BulkDataService::USER_AGENT)
             ->withOptions([
                 'sink' => $destination,
                 'timeout' => 300,
             ])
             ->get($url);
 
-        if (! $response->successful() && ! file_exists($destination)) {
+        if (! $response->successful()) {
+            /*
+             * Guzzle writes the response body to the sink even on a 4xx/5xx, so
+             * the destination would otherwise hold an error page to be parsed.
+             */
+            @unlink($destination);
+
             $this->error('Failed to download rules file.');
 
             return false;
@@ -138,27 +145,29 @@ class ImportComprehensiveRules extends Command
         $effectiveDate = $this->extractEffectiveDate($content);
         $parsed = $this->parseRulesFile($content, $effectiveDate);
 
-        $showProgress = ! $this->option('no-progress');
         $count = 0;
         $batch = [];
+        $progressBar = null;
 
-        if ($showProgress) {
+        if (! $this->option('no-progress')) {
             $progressBar = $this->output->createProgressBar(count($parsed));
             $progressBar->setFormat(' %current%/%max% rules [%bar%] %percent:3s%%');
             $progressBar->start();
         }
 
-        foreach ($parsed as $rule) {
-            $batch[] = $rule;
+        /*
+         * Rule numbers do not sort as strings ("702.100" < "702.11"), so each
+         * row keeps its place in the file for the tools to order by.
+         */
+        foreach ($parsed as $index => $rule) {
+            $batch[] = [...$rule, 'position' => $index + 1];
             $count++;
 
             if (count($batch) >= self::BATCH_SIZE) {
                 $this->upsertBatch($batch);
                 $batch = [];
 
-                if ($showProgress) {
-                    $progressBar->setProgress($count);
-                }
+                $progressBar?->setProgress($count);
             }
         }
 
@@ -166,7 +175,7 @@ class ImportComprehensiveRules extends Command
             $this->upsertBatch($batch);
         }
 
-        if ($showProgress) {
+        if ($progressBar !== null) {
             $progressBar->finish();
             $this->newLine();
         }
@@ -180,7 +189,7 @@ class ImportComprehensiveRules extends Command
     private function upsertBatch(array $batch): void
     {
         ComprehensiveRule::upsert($batch, ['rule_number'], [
-            'section', 'chapter', 'content', 'is_glossary', 'effective_date', 'updated_at',
+            'section', 'chapter', 'content', 'is_glossary', 'position', 'effective_date', 'updated_at',
         ]);
     }
 
@@ -204,7 +213,7 @@ class ImportComprehensiveRules extends Command
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function parseRulesFile(string $content, string $effectiveDate): array
+    private function parseRulesFile(string $content, string $effectiveDate): array
     {
         $lines = explode("\n", str_replace("\r\n", "\n", $content));
         $rules = [];

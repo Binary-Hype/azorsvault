@@ -21,6 +21,18 @@ test('it finds multiple cards by name', function () {
         ->assertSee('Dark Ritual');
 });
 
+test('it returns the most recent printing of each name regardless of case', function () {
+    Card::factory()->create(['name' => 'Sol Ring', 'set_name' => 'Alpha', 'released_at' => '1993-08-05']);
+    Card::factory()->create(['name' => 'Sol Ring', 'set_name' => 'Foundations', 'released_at' => '2024-11-15']);
+
+    $response = MtgServer::tool(SearchCards::class, ['names' => ['sol ring']]);
+
+    $response->assertOk()
+        ->assertSee('"sol ring": {')
+        ->assertSee('Foundations')
+        ->assertDontSee('Alpha');
+});
+
 test('it returns null for cards not found in batch', function () {
     Card::factory()->create(['name' => 'Lightning Bolt']);
 

@@ -49,16 +49,13 @@ class SearchRules extends Tool
 
         $rules = $query
             ->orderBy('is_glossary')
-            ->orderBy('rule_number')
+            ->inRulebookOrder()
             ->limit($limit)
             ->get();
 
         return Response::text(json_encode([
             'count' => $rules->count(),
-            'rules' => $rules->map(fn (ComprehensiveRule $rule) => [
-                'rule_number' => $rule->rule_number,
-                'content' => $rule->content,
-            ])->values()->all(),
+            'rules' => $rules->map(fn (ComprehensiveRule $rule) => $rule->toSearchResult())->all(),
         ], JSON_PRETTY_PRINT));
     }
 

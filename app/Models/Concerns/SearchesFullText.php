@@ -43,16 +43,20 @@ trait SearchesFullText
      */
     protected function scopeFullTextSearch(Builder $query, string $column, string $search): void
     {
-        $terms = preg_split('/\s+/', trim($search), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        /*
+         * Operators become word breaks rather than being dropped, so "Lim-Dûl"
+         * searches for "Lim" and "Dûl" (as the index stores it), not "LimDûl".
+         */
+        $terms = preg_split('/\s+/', trim(str_replace(self::BOOLEAN_OPERATORS, ' ', $search)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
         $indexable = array_values(array_filter(
-            array_map(fn (string $term) => str_replace(self::BOOLEAN_OPERATORS, '', $term), $terms),
+            $terms,
             fn (string $term) => mb_strlen($term) >= self::MIN_FULLTEXT_TOKEN
                 && ! in_array(mb_strtolower($term), self::STOPWORDS, true),
         ));
 
         if ($indexable === []) {
-            $query->where($column, 'LIKE', '%'.$search.'%');
+            $query->where($column, 'LIKE', '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search).'%');
 
             return;
         }

@@ -106,11 +106,4 @@ class CardFactory extends Factory
             ],
         ]);
     }
-
-    public function commanderLegal(): static
-    {
-        return $this->state(fn () => [
-            'legalities' => ['commander' => 'legal', 'standard' => 'not_legal', 'modern' => 'legal'],
-        ]);
-    }
 }

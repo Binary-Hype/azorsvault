@@ -2,13 +2,14 @@
 
 namespace App\Services\Scryfall;
 
+use Generator;
 use Illuminate\Console\OutputStyle;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 
 class BulkDataService
 {
-    private const USER_AGENT = 'MtgMCP/1.0';
+    /** Sent with every outbound request to Scryfall and Wizards of the Coast. */
+    public const USER_AGENT = 'MtgMCP/1.0';
 
     private const BULK_DATA_ENDPOINT = 'https://api.scryfall.com/bulk-data';
 
@@ -108,15 +109,24 @@ class BulkDataService
     }
 
     /**
-     * Bulk upsert a batch of rows into the given model's table.
+     * Scryfall bulk data files are JSON Lines (one object per line), not a
+     * single top-level JSON array.
      *
-     * @param  class-string<Model>  $modelClass
-     * @param  array<int, array<string, mixed>>  $batch
-     * @param  array<int, string>  $uniqueBy
-     * @param  array<int, string>  $updateColumns
+     * @param  resource  $stream  A stream opened with gzopen().
+     * @return Generator<int, array<string, mixed>>
+     *
+     * @throws \JsonException When a line is not valid JSON.
      */
-    public function upsertBatch(string $modelClass, array $batch, array $uniqueBy, array $updateColumns): void
+    public function readJsonLines($stream): Generator
     {
-        $modelClass::upsert($batch, $uniqueBy, $updateColumns);
+        while (($line = gzgets($stream)) !== false) {
+            $line = trim($line);
+
+            if ($line === '') {
+                continue;
+            }
+
+            yield json_decode($line, true, flags: JSON_THROW_ON_ERROR);
+        }
     }
 }

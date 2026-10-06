@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\LatinFonts;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The families the cached stylesheet was fetched for, read from config rather
@@ -40,7 +41,7 @@ test('it preloads a file for each configured family', function () {
 });
 
 test('it renders crossorigin font preload links', function () {
-    $html = app(LatinFonts::class)->toHtml()->toHtml();
+    $html = app(LatinFonts::class)->preloadTags()->toHtml();
 
     expect(substr_count($html, '<link rel="preload"'))->toBe(count(app(LatinFonts::class)->files()))
         ->and($html)->toContain('as="font"')
@@ -52,7 +53,18 @@ test('it degrades to no links when the fonts have not been fetched', function ()
     config()->set('google-fonts.path', 'fonts-that-were-never-fetched');
 
     expect(app(LatinFonts::class)->files())->toBe([])
-        ->and(app(LatinFonts::class)->toHtml()->toHtml())->toBe('');
+        ->and(app(LatinFonts::class)->preloadTags()->toHtml())->toBe('');
+});
+
+test('a missing font cache is reported once per render, not per call', function () {
+    config()->set('google-fonts.path', 'fonts-that-were-never-fetched');
+    Log::spy();
+
+    $fonts = app(LatinFonts::class);
+    $fonts->preloadTags();
+    $fonts->toStyleTag();
+
+    Log::shouldHaveReceived('error')->once();
 });
 
 test('every page preloads the fonts, not just the landing page', function () {
@@ -64,7 +76,7 @@ test('every page preloads the fonts, not just the landing page', function () {
 });
 
 /*
- * The package's @googlefonts directive inlined all 82 @font-face rules (~34 KB)
+ * The package's @googlefonts directive inlined every subset's @font-face rule
  * into every response; these pages only ever render the basic-latin subset.
  */
 test('it inlines only the basic-latin font faces', function () {

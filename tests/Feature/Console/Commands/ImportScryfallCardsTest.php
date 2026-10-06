@@ -454,6 +454,31 @@ test('it extracts the game changer flag', function () {
         ->toHaveKey('game_changer', false);
 });
 
+/*
+ * Reversible cards carry oracle_id only on their faces. Storing null merged
+ * every such card into one during deduplication and left them without rulings.
+ */
+test('it falls back to the front face oracle id for reversible cards', function () {
+    $command = new ImportScryfallCards;
+    $reflection = new ReflectionMethod($command, 'extractCardData');
+
+    $result = $reflection->invoke($command, [
+        'id' => 'a3f4b2c1-0000-4000-8000-000000000003',
+        'name' => 'Zndrsplt, Eye of Wisdom // Zndrsplt, Eye of Wisdom',
+        'layout' => 'reversible_card',
+        'set' => 'sld',
+        'set_name' => 'Secret Lair Drop',
+        'collector_number' => '379',
+        'rarity' => 'rare',
+        'card_faces' => [
+            ['name' => 'Zndrsplt, Eye of Wisdom', 'oracle_id' => 'face-oracle-id'],
+            ['name' => 'Zndrsplt, Eye of Wisdom', 'oracle_id' => 'face-oracle-id'],
+        ],
+    ]);
+
+    expect($result)->toHaveKey('oracle_id', 'face-oracle-id');
+});
+
 test('it persists the game changer flag on import', function () {
     $gzContent = makeGzippedCardJson([
         [

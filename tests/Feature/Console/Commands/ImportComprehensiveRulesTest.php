@@ -109,6 +109,23 @@ test('it fails gracefully when wizards page is unreachable', function () {
         ->assertFailed();
 });
 
+/*
+ * Guzzle writes a 4xx/5xx body to the sink file, so the download used to be
+ * reported as successful and the error page was parsed as the rules file.
+ */
+test('it fails and discards the body when the rules download fails', function () {
+    Http::fake([
+        'magic.wizards.com/en/rules' => Http::response('<a href="https://media.wizards.com/2026/downloads/MagicCompRules%2020260227.txt">TXT</a>'),
+        'media.wizards.com/*' => Http::response('Not Found', 404),
+    ]);
+
+    $this->artisan('rules:import-comprehensive --force --no-progress')
+        ->expectsOutputToContain('Failed to download rules file')
+        ->assertFailed();
+
+    expect(file_exists(storage_path('app/private/rules/comprehensive_rules.txt')))->toBeFalse();
+});
+
 test('it fails gracefully when no download link found on page', function () {
     Http::fake([
         'magic.wizards.com/en/rules' => Http::response('<html><body>No links here</body></html>'),
@@ -158,6 +175,16 @@ test('it parses glossary entries correctly', function () {
     expect($entry->is_glossary)->toBeTrue();
     expect($entry->section)->toBeNull();
     expect($entry->chapter)->toBeNull();
+});
+
+test('it records each rule in rulebook order', function () {
+    fakeRulesPageWithDownload(txtContent: sampleRulesTxt());
+
+    $this->artisan('rules:import-comprehensive --force --no-progress')
+        ->assertSuccessful();
+
+    expect(ComprehensiveRule::rules()->inRulebookOrder()->pluck('rule_number')->all())
+        ->toBe(['100', '100.1', '100.1a', '100.1b', '100.2', '704', '704.1', '704.5a']);
 });
 
 test('it handles multi-line rules correctly', function () {

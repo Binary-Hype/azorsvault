@@ -162,6 +162,32 @@ test('it accepts a commander whose text says it can be your commander', function
         ->assertSee('"valid": true');
 });
 
+test('it accepts a Background paired with a commander that can choose one', function () {
+    greenCard('Wilson, Refined Grizzly', [
+        'type_line' => 'Legendary Creature — Bear Warrior',
+        'oracle_text' => "Choose a Background (You can have a Background as a second commander.)\nReach, trample",
+    ]);
+    greenCard('Raised by Giants', ['type_line' => 'Legendary Enchantment — Background']);
+
+    $response = MtgServer::tool(ValidateDeck::class, [
+        'decklist' => decklist([], "1 Wilson, Refined Grizzly\n1 Raised by Giants"),
+    ]);
+
+    $response->assertOk()
+        ->assertDontSee('cannot be a commander');
+});
+
+test('it rejects a Background without a commander that can choose one', function () {
+    greenCard('Raised by Giants', ['type_line' => 'Legendary Enchantment — Background']);
+
+    $response = MtgServer::tool(ValidateDeck::class, [
+        'decklist' => decklist([], "1 Azusa, Lost but Seeking\n1 Raised by Giants"),
+    ]);
+
+    $response->assertOk()
+        ->assertSee('Raised by Giants cannot be a commander');
+});
+
 test('it counts game changers and reports the lowest bracket that allows them', function () {
     greenCard('Survival of the Fittest', [
         'type_line' => 'Enchantment',

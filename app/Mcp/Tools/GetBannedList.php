@@ -5,6 +5,7 @@ namespace App\Mcp\Tools;
 use App\Models\Card;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -19,20 +20,10 @@ class GetBannedList extends Tool
 {
     private const MAX_RESULTS = 500;
 
-    /**
-     * Formats tracked in the Scryfall legality data.
-     */
-    private const FORMATS = [
-        'standard', 'future', 'historic', 'timeless', 'gladiator', 'pioneer',
-        'explorer', 'modern', 'legacy', 'pauper', 'vintage', 'penny',
-        'commander', 'oathbreaker', 'standardbrawl', 'brawl', 'alchemy',
-        'paupercommander', 'duel', 'oldschool', 'premodern', 'predh',
-    ];
-
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'format' => ['required', 'string', 'in:'.implode(',', self::FORMATS)],
+            'format' => ['required', 'string', Rule::in(Card::FORMATS)],
             'status' => 'nullable|string|in:banned,restricted',
         ]);
 
@@ -75,7 +66,7 @@ class GetBannedList extends Tool
     {
         return [
             'format' => $schema->string()
-                ->enum(self::FORMATS)
+                ->enum(Card::FORMATS)
                 ->description('The format whose list to fetch, e.g. "commander", "modern", "vintage".')
                 ->required(),
             'status' => $schema->string()

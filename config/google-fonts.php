@@ -26,16 +26,16 @@ return [
 
     /*
      * Irrelevant while the @googlefonts directive is unused: App\Services\
-     * LatinFonts inlines the basic-latin faces itself, which is 14 of the
-     * stylesheet's 82 rules. Kept at the package default.
+     * LatinFonts inlines only the basic-latin faces itself, a small share of
+     * the stylesheet's rules. Kept at the package default.
      */
     'inline' => true,
 
     /*
-     * This stays false because the package preloads every subset it fetched —
-     * 23 files, most of which these pages never render. App\Services\
-     * LatinFonts emits the four latin files instead, which is what the
-     * layout links and what keeps the font swap from shifting the layout.
+     * This stays false because the package preloads every subset it fetched,
+     * most of which these pages never render. App\Services\LatinFonts
+     * preloads only the basic-latin files instead, which is what the layout
+     * links and what keeps the font swap from shifting the layout.
      */
     'preload' => false,
 
