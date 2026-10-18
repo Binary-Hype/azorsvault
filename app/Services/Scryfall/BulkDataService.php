@@ -4,6 +4,7 @@ namespace App\Services\Scryfall;
 
 use Generator;
 use Illuminate\Console\OutputStyle;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 class BulkDataService
@@ -16,15 +17,31 @@ class BulkDataService
     private const ALLOWED_DOWNLOAD_PREFIX = 'https://data.scryfall.io/';
 
     /**
+     * Backoff between attempts at the metadata endpoint, so a brief Scryfall
+     * outage does not cost the whole nightly import.
+     *
+     * @var list<int>
+     */
+    private const METADATA_RETRY_DELAYS_MS = [5_000, 30_000, 60_000];
+
+    /**
      * Look up a Scryfall bulk-data entry by its `type` field.
+     *
+     * Returns null when Scryfall stays unreachable after every retry; that is
+     * an outage on their side, not a bug here, so the caller just skips the run.
      *
      * @return array{download_uri: string, size: int}|null
      */
     public function getBulkDataInfo(BulkDataType $type): ?array
     {
-        $response = Http::withUserAgent(self::USER_AGENT)
-            ->accept('application/json')
-            ->get(self::BULK_DATA_ENDPOINT);
+        try {
+            $response = Http::withUserAgent(self::USER_AGENT)
+                ->accept('application/json')
+                ->retry(self::METADATA_RETRY_DELAYS_MS, throw: false)
+                ->get(self::BULK_DATA_ENDPOINT);
+        } catch (ConnectionException) {
+            return null;
+        }
 
         if (! $response->successful()) {
             return null;

@@ -5,6 +5,7 @@ use App\Models\Ruling;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 
 uses(RefreshDatabase::class);
 
@@ -80,6 +81,8 @@ test('it rejects download URIs from untrusted domains', function () {
 });
 
 test('it fails gracefully when scryfall api is unreachable', function () {
+    Sleep::fake();
+
     Http::fake([
         'api.scryfall.com/bulk-data' => Http::response('', 500),
     ]);
