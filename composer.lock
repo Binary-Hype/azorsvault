@@ -2597,16 +2597,16 @@
         },
         {
             "name": "notonfire/php",
-            "version": "v1.0.1",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Not-On-Fire/php.git",
-                "reference": "0779e676934e846567b2dd30ce1bcc0e44d6cad2"
+                "reference": "ca4395e1ee326333299257cb76d9f15ec341854f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Not-On-Fire/php/zipball/0779e676934e846567b2dd30ce1bcc0e44d6cad2",
-                "reference": "0779e676934e846567b2dd30ce1bcc0e44d6cad2",
+                "url": "https://api.github.com/repos/Not-On-Fire/php/zipball/ca4395e1ee326333299257cb76d9f15ec341854f",
+                "reference": "ca4395e1ee326333299257cb76d9f15ec341854f",
                 "shasum": ""
             },
             "require": {
@@ -2653,7 +2653,7 @@
                 "issues": "https://github.com/Not-On-Fire/php/issues",
                 "source": "https://github.com/Not-On-Fire/php"
             },
-            "time": "2026-10-05T10:54:54+00:00"
+            "time": "2026-10-25T20:13:59+00:00"
         },
         {
             "name": "nunomaduro/termwind",
