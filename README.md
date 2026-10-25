@@ -45,7 +45,7 @@ Any client that speaks the streamable-HTTP MCP transport works. Use the same URL
 
 ## Self-hosting
 
-Requirements: PHP 8.4, Composer, Node 20+, and MariaDB or MySQL. SQLite is not supported: the search relies on FULLTEXT indexes and JSON functions.
+Requirements: PHP 8.5, Composer, Node 20+, and MariaDB or MySQL. SQLite is not supported: the search relies on FULLTEXT indexes and JSON functions.
 
 ```bash
 composer install
