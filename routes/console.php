@@ -14,6 +14,11 @@ Schedule::command('scryfall:import-rulings')
     ->withoutOverlapping()
     ->runInBackground();
 
+Schedule::command('bunny:sync-edge-servers')
+    ->daily()
+    ->at('02:30')
+    ->withoutOverlapping();
+
 Schedule::command('rules:import-comprehensive')
     ->weekly()
     ->sundays()
